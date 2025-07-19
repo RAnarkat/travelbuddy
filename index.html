@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LoopMates.ai</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -16,6 +17,7 @@
       background-color: #e5ecf7;
       padding: 2rem;
       text-align: center;
+      animation: fadeInDown 1.5s ease-in;
     }
     header h1 {
       font-size: 2.5rem;
@@ -36,15 +38,27 @@
       border-radius: 10px;
       cursor: pointer;
       margin-top: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #4a6aa1;
     }
     section {
       padding: 3rem 2rem;
       max-width: 900px;
       margin: auto;
+      animation: fadeIn 2s ease-in;
     }
     .feature {
       margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeInUp 1s ease forwards;
     }
+    .feature:nth-child(1) { animation-delay: 0.2s; }
+    .feature:nth-child(2) { animation-delay: 0.4s; }
+    .feature:nth-child(3) { animation-delay: 0.6s; }
+    .feature:nth-child(4) { animation-delay: 0.8s; }
+
     .feature h2 {
       font-size: 1.6rem;
       color: #333;
@@ -59,14 +73,42 @@
       text-align: center;
       font-size: 0.9rem;
       color: #777;
+      animation: fadeIn 2.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>LoopMates.ai</h1>
-    <p>Find travel companions for short, meaningful experiences – loops you'll never forget.</p>
-    <button class="btn-primary">Get Started</button>
+    <h1 class="animate__animated animate__fadeInDown">LoopMates.ai</h1>
+    <p class="animate__animated animate__fadeInUp">Find travel companions for short, meaningful experiences – loops you'll never forget.</p>
+    <button class="btn-primary animate__animated animate__fadeIn">Get Started</button>
   </header>
 
   <section>
