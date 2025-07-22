@@ -110,16 +110,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-// start of copied code //
-    
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
       authDomain: "loopmates-94b46.firebaseapp.com",
@@ -130,61 +123,50 @@
       appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
     };
 
-// Initialize Firebase
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
-    const auth = getAuth();
 
     let currentUser = null;
 
-    const auth = getAuth(app);
-
-// ✅ Show login/register form
     window.showAuth = () => {
       document.getElementById('auth').style.display = 'block';
     };
 
-// ✅ Register function
     window.register = () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          alert('Registered successfully!');
+          document.getElementById('auth').style.display = 'none';
+        })
+        .catch(error => {
+          alert('Registration failed: ' + error.message);
+        });
+    };
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert('Registered successfully!');
-        document.getElementById('auth').style.display = 'none';
-      })
-      .catch(error => {
-        alert('Registration failed: ' + error.message);
-      });
-  };
+    window.login = () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          currentUser = userCredential.user;
+          alert('Logged in successfully!');
+          document.getElementById('auth').style.display = 'none';
+        })
+        .catch(error => {
+          alert('Login failed: ' + error.message);
+        });
+    };
 
-// ✅ Login function
-  window.login = () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert('Logged in successfully!');
-        document.getElementById('auth').style.display = 'none';
-      })
-      .catch(error => {
-        alert('Login failed: ' + error.message);
-      });
-  };
-
-// Optional: Log current user
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("User is logged in:", user.email);
-    } else {
-      console.log("User is logged out.");
-    }
-  });
-// ends here //
+      currentUser = user;
+      if (user) displayLoops();
+    });
+
     window.submitLoop = () => {
-      if (!currentUser) return alert("Login first");
+      if (!currentUser) return alert("Please log in to post a loop.");
       const loop = {
         title: loopTitle.value,
         desc: loopDesc.value,
@@ -226,7 +208,7 @@
     };
 
     window.joinLoop = (id) => {
-      if (!currentUser) return alert("Login first");
+      if (!currentUser) return alert("Please log in to join a loop.");
       const updates = {};
       updates[`loops/${id}/joined/${currentUser.uid}`] = true;
       update(ref(db), updates).then(() => displayLoops());
