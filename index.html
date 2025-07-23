@@ -69,7 +69,7 @@
 </head>
 <body>
   <header>
-    <h1>LoopMates.ai</h1>
+    <h1>LoopMeets.ai</h1>
     <p>Find short-term travel buddies for micro adventures.</p>
     <button class="btn-primary" onclick="showAuth()">Login / Register</button>
   </header>
@@ -112,16 +112,16 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
+    
     const firebaseConfig = {
-      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-      authDomain: "loopmates-94b46.firebaseapp.com",
-      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-      projectId: "loopmates-94b46",
-      storageBucket: "loopmates-94b46.firebasestorage.app",
-      messagingSenderId: "336997321934",
-      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-    };
+    apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
+    authDomain: "loopmates-94b46.firebaseapp.com",
+    databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
+    projectId: "loopmates-94b46",
+    storageBucket: "loopmates-94b46.firebasestorage.app",
+    messagingSenderId: "336997321934",
+    appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
+  };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
