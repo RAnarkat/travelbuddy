@@ -4,42 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoopMates.ai</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background: #f9f9f9;
+      background: #f4f8fc;
       margin: 0;
       padding: 0;
     }
-    header, section, footer {
-      animation: fadeIn 1s ease-in;
-    }
     header {
-      background-color: #e5ecf7;
+      background: linear-gradient(to right, #6887c4, #89c9e2);
+      color: white;
       padding: 2rem;
       text-align: center;
     }
     header h1 {
-      font-size: 2.5rem;
+      font-family: 'Pacifico', cursive;
+      font-size: 3rem;
       margin: 0;
-      color: #333;
     }
     header p {
       font-size: 1.1rem;
       margin-top: 0.5rem;
-      color: #555;
     }
     .btn-primary {
-      background-color: #6887c4;
-      color: white;
+      background-color: white;
+      color: #6887c4;
       padding: 0.75rem 1.5rem;
       font-size: 1rem;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       margin-top: 1rem;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #d0e3ff;
     }
     section {
       padding: 2rem;
@@ -53,166 +54,238 @@
       margin-bottom: 1rem;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      animation: fadeInUp 0.6s ease;
+    }
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    input, button, textarea {
+      font-family: inherit;
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+      box-sizing: border-box;
     }
     footer {
       background: #f1f1f1;
-      padding: 1rem;
+      padding: 1.5rem;
       text-align: center;
       font-size: 0.9rem;
-      color: #777;
+      color: #555;
+      font-style: italic;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    #userWelcome {
+      margin-top: 1rem;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .profile-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>LoopMeets.ai</h1>
+    <h1>LoopMates.ai</h1>
     <p>Find short-term travel buddies for micro adventures.</p>
+    <div id="userWelcome"></div>
     <button class="btn-primary" onclick="showAuth()">Login / Register</button>
+    <button class="btn-primary" onclick="logout()">Logout</button>
+    <button class="btn-primary" onclick="showProfile()">My Profile</button>
   </header>
 
   <section>
     <div id="auth" style="display:none;">
-      <input id="email" placeholder="Email" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;">
-      <input id="password" type="password" placeholder="Password" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;">
+      <input id="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
       <button onclick="login()">Login</button>
       <button onclick="register()">Register</button>
     </div>
   </section>
 
-  <section>
-    <h2>Create a Loop</h2>
-    <input id="loopTitle" placeholder="Title">
-    <input id="loopDesc" placeholder="Description">
-    <input id="loopLoc" placeholder="Location">
-    <input id="loopTime" type="datetime-local">
-    <button onclick="submitLoop()">Post Loop</button>
+  <section class="profile-card" id="profileSection" style="display:none;">
+    <h2>My Profile</h2>
+    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+    <p><strong>My Loops Joined:</strong></p>
+    <ul id="joinedLoops"></ul>
   </section>
 
-  <section>
-    <h2>Filter Loops</h2>
-    <input id="filterLoc" placeholder="Filter by Location">
-    <input id="filterTime" type="datetime-local">
-    <button onclick="displayLoops()">Apply Filter</button>
+  <section id="createLoop">
+    <h2>Create a New Loop</h2>
+    <input id="loopTitle" placeholder="Loop Title (e.g., 🌮 Taco Tuesday!)" />
+    <input id="loopLocation" placeholder="Location" />
+    <input id="loopTime" placeholder="Time (e.g., July 26, 6PM)" />
+    <textarea id="loopDescription" placeholder="Add a quick description..."></textarea>
+    <button onclick="createLoop()">Create Loop</button>
   </section>
 
-  <section>
-    <h2>Nearby Loops</h2>
+  <section id="filterLoops">
+    <h2>Find Loops</h2>
+    <input id="filterLocation" placeholder="Filter by location...">
+    <input id="filterTime" placeholder="Filter by time...">
+    <button onclick="filterLoops()">Filter</button>
+  </section>
+
+  <section id="loopFeed">
+    <h2>Live Loops</h2>
     <div id="loopList"></div>
   </section>
 
   <footer>
-    &copy; 2025 LoopMates.ai. Built by students, for explorers.
+    &copy; 2025 LoopMates.ai — Make friends, not just memories.
   </footer>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    
+    import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
     const firebaseConfig = {
-    apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-    authDomain: "loopmates-94b46.firebaseapp.com",
-    databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-    projectId: "loopmates-94b46",
-    storageBucket: "loopmates-94b46.firebasestorage.app",
-    messagingSenderId: "336997321934",
-    appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-  };
+      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
+      authDomain: "loopmates-94b46.firebaseapp.com",
+      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
+      projectId: "loopmates-94b46",
+      storageBucket: "loopmates-94b46.firebasestorage.app",
+      messagingSenderId: "336997321934",
+      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
+    };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    let currentUser = null;
+    const loopList = document.getElementById("loopList");
 
-    window.showAuth = () => {
-      document.getElementById('auth').style.display = 'block';
-    };
+    function showAuth() {
+      document.getElementById("auth").style.display = "block";
+    }
 
-    window.register = () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-          alert('Registered successfully!');
-          document.getElementById('auth').style.display = 'none';
-        })
-        .catch(error => {
-          alert('Registration failed: ' + error.message);
-        });
-    };
-
-    window.login = () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
       signInWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-          currentUser = userCredential.user;
-          alert('Logged in successfully!');
-          document.getElementById('auth').style.display = 'none';
+        .then(user => {
+          document.getElementById("userWelcome").textContent = `Welcome, ${email}`;
         })
-        .catch(error => {
-          alert('Login failed: ' + error.message);
-        });
-    };
+        .catch(err => alert(err.message));
+    }
 
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (user) displayLoops();
-    });
+    function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(user => {
+          document.getElementById("userWelcome").textContent = `Welcome, ${email}`;
+        })
+        .catch(err => alert(err.message));
+    }
 
-    window.submitLoop = () => {
-      if (!currentUser) return alert("Please log in to post a loop.");
-      const loop = {
-        title: loopTitle.value,
-        desc: loopDesc.value,
-        loc: loopLoc.value,
-        time: loopTime.value,
-        uid: currentUser.uid
+    function logout() {
+      signOut(auth).then(() => {
+        document.getElementById("userWelcome").textContent = "";
+        alert("Logged out");
+      });
+    }
+
+    function createLoop() {
+      const user = auth.currentUser;
+      if (!user) return alert("Please login first");
+      const title = document.getElementById("loopTitle").value;
+      const location = document.getElementById("loopLocation").value;
+      const time = document.getElementById("loopTime").value;
+      const description = document.getElementById("loopDescription").value;
+      const newLoop = {
+        title,
+        location,
+        time,
+        description,
+        attendees: [user.uid]
       };
-      push(ref(db, 'loops/'), loop);
-      alert("Loop posted");
-    };
+      push(ref(db, "loops"), newLoop);
+    }
 
-    window.displayLoops = () => {
-      const list = document.getElementById('loopList');
-      list.innerHTML = '';
-      const filterLoc = document.getElementById('filterLoc').value.toLowerCase();
-      const filterTime = document.getElementById('filterTime').value;
-
-      onValue(ref(db, 'loops/'), snap => {
-        const data = snap.val();
-        if (!data) return list.innerHTML = '<p>No loops found.</p>';
-        Object.entries(data).reverse().forEach(([id, loop]) => {
-          if (filterLoc && !loop.loc.toLowerCase().includes(filterLoc)) return;
-          if (filterTime && loop.time < filterTime) return;
-
-          const joinedCount = loop.joined ? Object.keys(loop.joined).length : 0;
-          const card = document.createElement('div');
-          card.className = 'loop-card';
-          card.innerHTML = `
-            <h3>${loop.title}</h3>
-            <p>${loop.desc}</p>
-            <p><strong>Location:</strong> ${loop.loc}</p>
-            <p><strong>Time:</strong> ${new Date(loop.time).toLocaleString()}</p>
-            <p><strong>Joined by:</strong> ${joinedCount} user(s)</p>
-            <button onclick="joinLoop('${id}')">Join Loop</button>
-          `;
-          list.appendChild(card);
+    function displayLoops() {
+      onValue(ref(db, "loops"), snapshot => {
+        loopList.innerHTML = "";
+        snapshot.forEach(child => {
+          const loop = child.val();
+          const div = document.createElement("div");
+          div.className = "loop-card";
+          div.innerHTML = `<h3>${loop.title}</h3><p><strong>Location:</strong> ${loop.location}</p><p><strong>Time:</strong> ${loop.time}</p><p>${loop.description}</p><button onclick="joinLoop('${child.key}', ${JSON.stringify(loop.attendees)})">Join</button>`;
+          loopList.appendChild(div);
         });
       });
+    }
+
+    window.joinLoop = (id, attendees) => {
+      const user = auth.currentUser;
+      if (!user) return alert("Please login to join loops.");
+      if (attendees.includes(user.uid)) return alert("You're already in this loop!");
+      attendees.push(user.uid);
+      set(ref(db, `loops/${id}/attendees`), attendees);
     };
 
-    window.joinLoop = (id) => {
-      if (!currentUser) return alert("Please log in to join a loop.");
-      const updates = {};
-      updates[`loops/${id}/joined/${currentUser.uid}`] = true;
-      update(ref(db), updates).then(() => displayLoops());
+    function filterLoops() {
+      const location = document.getElementById("filterLocation").value.toLowerCase();
+      const time = document.getElementById("filterTime").value.toLowerCase();
+      onValue(ref(db, "loops"), snapshot => {
+        loopList.innerHTML = "";
+        snapshot.forEach(child => {
+          const loop = child.val();
+          if (
+            loop.location.toLowerCase().includes(location) &&
+            loop.time.toLowerCase().includes(time)
+          ) {
+            const div = document.createElement("div");
+            div.className = "loop-card";
+            div.innerHTML = `<h3>${loop.title}</h3><p><strong>Location:</strong> ${loop.location}</p><p><strong>Time:</strong> ${loop.time}</p><p>${loop.description}</p><button onclick="joinLoop('${child.key}', ${JSON.stringify(loop.attendees)})">Join</button>`;
+            loopList.appendChild(div);
+          }
+        });
+      });
+    }
+
+    window.showProfile = () => {
+      const user = auth.currentUser;
+      if (!user) return alert("Please login first");
+      document.getElementById("profileSection").style.display = "block";
+      document.getElementById("profileEmail").textContent = user.email;
+
+      const joinedList = document.getElementById("joinedLoops");
+      joinedList.innerHTML = "";
+
+      onValue(ref(db, "loops"), snapshot => {
+        snapshot.forEach(child => {
+          const loop = child.val();
+          if (loop.attendees?.includes(user.uid)) {
+            const li = document.createElement("li");
+            li.textContent = loop.title + " – " + loop.time;
+            joinedList.appendChild(li);
+          }
+        });
+      }, { onlyOnce: true });
     };
+
+    displayLoops();
   </script>
 </body>
 </html>
