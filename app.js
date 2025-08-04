@@ -30,7 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-export const showTab = (id) => {
+const showTab = (id) => {
   document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
   document.getElementById(id).style.display = "block";
 
@@ -46,6 +46,7 @@ onAuthStateChanged(auth, user => {
   if (user) {
     document.getElementById("authSection").style.display = "none";
     document.getElementById("navBar").style.display = "flex";
+    document.getElementById("userDisplay").style.display = "flex";
     showTab("loopTab");
     loadUserProfile();
   } else {
@@ -62,16 +63,20 @@ window.login = () => {
   signInWithEmailAndPassword(auth, email, password).catch(alert);
 };
 
-window.logout = () => {
-  signOut(auth);
+window.signup = () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  createUserWithEmailAndPassword(auth, email, password).then(cred => {
+    const userRef = ref(db, `users/${cred.user.uid}`);
+    set(userRef, {
+      email,
+      joined: new Date().toISOString()
+    });
+  }).catch(alert);
 };
 
-window.saveProfileInfo = () => {
-  const uid = auth.currentUser.uid;
-  const username = document.getElementById("username").value;
-  const photoUrl = document.getElementById("photoUrl").value;
-  const userRef = ref(db, `users/${uid}`);
-  update(userRef, { username, photoUrl });
+window.logout = () => {
+  signOut(auth);
 };
 
 window.savePreferences = () => {
@@ -84,6 +89,19 @@ window.savePreferences = () => {
     activities: document.getElementById("prefActivities").value.split(",").map(s => s.trim().toLowerCase())
   };
   set(prefRef, preferences);
+};
+
+window.saveProfileInfo = () => {
+  const uid = auth.currentUser.uid;
+  const userRef = ref(db, `users/${uid}`);
+  const username = document.getElementById("username").value;
+  const photoUrl = document.getElementById("photoUrl").value;
+  update(userRef, {
+    username,
+    photoUrl
+  });
+  document.getElementById("userName").textContent = username;
+  document.getElementById("userPhoto").src = photoUrl;
 };
 
 window.createLoop = () => {
@@ -146,12 +164,13 @@ window.matchLoopsAI = () => {
 };
 
 const joinLoop = (loopId) => {
+  const uid = auth.currentUser.uid;
   const loopRef = ref(db, `loops/${loopId}`);
   onValue(loopRef, snap => {
     const loop = snap.val();
-    if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
+    if (!loop || loop.participants?.includes(uid)) return;
     const updated = loop.participants || [];
-    updated.push(auth.currentUser.uid);
+    updated.push(uid);
     update(loopRef, { participants: updated });
   }, { onlyOnce: true });
 };
@@ -160,27 +179,21 @@ window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
-    if (!user) return;
+    if (user.username) {
+      document.getElementById("userName").textContent = user.username;
+    }
+    if (user.photoUrl) {
+      document.getElementById("userPhoto").src = user.photoUrl;
+    }
 
     document.getElementById("username").value = user.username || "";
     document.getElementById("photoUrl").value = user.photoUrl || "";
 
-    const userDisplay = document.getElementById("userDisplay");
-    const userPhoto = document.getElementById("userPhoto");
-    const userName = document.getElementById("userName");
-
-    if (userDisplay && userPhoto && userName) {
-      userDisplay.style.display = "flex";
-      userPhoto.src = user.photoUrl || "https://via.placeholder.com/40";
-      userName.textContent = user.username || "My Profile";
-    }
-
-    // Pre-fill preference form
     if (user.preferences) {
       document.getElementById("prefClimate").value = user.preferences.climate || "";
       document.getElementById("prefPace").value = user.preferences.pace || "";
       document.getElementById("prefBudget").value = user.preferences.budget || "";
-      document.getElementById("prefActivities").value = (user.preferences.activities || []).join(", ");
+      document.getElementById("prefActivities").value = user.preferences.activities?.join(", ") || "";
     }
   });
 };
