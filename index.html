@@ -4,265 +4,147 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoopMeets</title>
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f9ff;
+      color: #1c1c1e;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #ccc;
+      padding: 1rem;
+      gap: 1rem;
+      align-items: center;
+    }
+    nav button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background: #0056b3;
+    }
+    input, select, button {
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 400px;
+    }
+    main {
+      padding: 2rem;
+    }
+    h2, h3 {
+      color: #007bff;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #userDisplay {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: 10px;
+    }
+    #userPhoto {
+      height: 40px;
+      width: 40px;
+      border-radius: 50%;
+    }
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+  <script type="module" src="app.js"></script>
 </head>
 <body>
   <header>
     <h1>LoopMeets</h1>
     <p>Find your perfect travel group, powered by AI.</p>
   </header>
-
-  <div id="authSection">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-
-    <h2>Register</h2>
-    <input type="email" id="regEmail" placeholder="Email" />
-    <input type="password" id="regPassword" placeholder="Password" />
-    <input type="text" id="regUsername" placeholder="Username" />
-    <input type="url" id="regPhotoUrl" placeholder="Profile Photo URL" />
-    <button onclick="register()">Register</button>
-  </div>
-
-  <nav id="navBar" style="display:none">
+  <nav id="navBar" style="display: none;">
     <button onclick="showTab('loopTab')">Loops</button>
-    <button onclick="showTab('userProfile')">My Profile</button>
+    <button onclick="showTab('profileTab')">My Profile</button>
+    <div id="userDisplay"></div>
     <button onclick="logout()">Logout</button>
-    <div id="userDisplay" style="display:none; margin-left: auto; align-items: center; gap: 10px;">
-      <img id="userPhoto" src="" alt="Profile" style="height:40px;width:40px;border-radius:50%" />
-      <span id="userName" style="font-weight: bold;"></span>
-    </div>
   </nav>
-
   <main>
-    <div id="loopTab" style="display:none">
-      <h2>Matched Loops</h2>
-      <ul id="matchedLoops"></ul>
+    <div id="authSection">
+      <h2>Welcome to LoopMeets</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <button onclick="signup()">Register</button>
+    </div>
 
+    <div id="loopTab" style="display: none;">
       <h2>Create a Loop</h2>
-      <input type="text" id="loopTitle" placeholder="Title" />
-      <input type="text" id="loopLocation" placeholder="Location" />
-      <input type="number" id="loopMax" placeholder="Max Participants" />
-      <input type="text" id="loopTags" placeholder="Tags (comma separated)" />
+      <input type="text" id="loopTitle" placeholder="Loop Title">
+      <input type="text" id="loopLocation" placeholder="Location">
+      <input type="number" id="loopMax" placeholder="Max Participants">
+      <input type="text" id="loopTags" placeholder="Tags (comma separated)">
       <button onclick="createLoop()">Create</button>
 
-      <h2>My Loops</h2>
+      <h3>Matched Loops</h3>
+      <ul id="matchedLoops"></ul>
+
+      <h3>My Loops</h3>
       <ul id="myLoops"></ul>
     </div>
 
-    <div id="userProfile" style="display:none">
-      <h2>Profile</h2>
-      <input type="text" id="username" placeholder="Username" />
-      <input type="url" id="photoUrl" placeholder="Profile Photo URL" />
-      <button onclick="saveProfileInfo()">Save Profile</button>
+    <div id="profileTab" style="display: none;">
+      <h2>My Profile</h2>
+      <input type="text" id="username" placeholder="Username">
+      <input type="url" id="profilePhoto" placeholder="Profile Photo URL">
+      <button onclick="saveProfile()">Save Profile</button>
 
       <h3>Preferences</h3>
-      <label for="prefClimate">Climate:</label>
       <select id="prefClimate">
         <option value="warm">Warm</option>
         <option value="cold">Cold</option>
+        <option value="mild">Mild</option>
       </select>
-
-      <label for="prefPace">Pace:</label>
       <select id="prefPace">
         <option value="relaxed">Relaxed</option>
         <option value="adventurous">Adventurous</option>
+        <option value="balanced">Balanced</option>
       </select>
-
-      <label for="prefBudget">Budget:</label>
       <select id="prefBudget">
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
       </select>
-
-      <label for="prefActivities">Activities:</label>
-      <input type="text" id="prefActivities" placeholder="Activities (comma separated)" />
-
+      <input type="text" id="prefActivities" placeholder="Activities (comma separated)">
       <button onclick="savePreferences()">Save Preferences</button>
+
+      <h3>Saved Preferences</h3>
+      <div id="userPrefs"></div>
     </div>
   </main>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      push,
-      onValue,
-      update
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-      authDomain: "loopmates-94b46.firebaseapp.com",
-      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-      projectId: "loopmates-94b46",
-      storageBucket: "loopmates-94b46.appspot.com",
-      messagingSenderId: "336997321934",
-      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getDatabase(app);
-
-    const showTab = (id) => {
-      document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-      document.getElementById(id).style.display = "block";
-      if (id === "loopTab") {
-        loadMyLoops();
-        matchLoopsAI();
-      } else if (id === "userProfile") {
-        loadUserProfile();
-      }
-    };
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        document.getElementById("authSection").style.display = "none";
-        document.getElementById("navBar").style.display = "flex";
-        document.getElementById("userDisplay").style.display = "flex";
-        showTab("loopTab");
-        loadUserProfile();
-      } else {
-        document.getElementById("authSection").style.display = "block";
-        document.getElementById("navBar").style.display = "none";
-        document.getElementById("userDisplay").style.display = "none";
-        showTab("authSection");
-      }
-    });
-
-    window.login = () => {
-      signInWithEmailAndPassword(auth, email.value, password.value).catch(alert);
-    };
-
-    window.register = () => {
-      createUserWithEmailAndPassword(auth, regEmail.value, regPassword.value).then(cred => {
-        set(ref(db, `users/${cred.user.uid}`), {
-          username: regUsername.value,
-          photoUrl: regPhotoUrl.value,
-          preferences: {},
-          loops: []
-        });
-      }).catch(alert);
-    };
-
-    window.logout = () => signOut(auth);
-
-    window.saveProfileInfo = () => {
-      const uid = auth.currentUser.uid;
-      update(ref(db, `users/${uid}`), {
-        username: username.value,
-        photoUrl: photoUrl.value
-      });
-    };
-
-    window.savePreferences = () => {
-      const uid = auth.currentUser.uid;
-      const preferences = {
-        climate: prefClimate.value,
-        pace: prefPace.value,
-        budget: prefBudget.value,
-        activities: prefActivities.value.split(",").map(a => a.trim().toLowerCase())
-      };
-      update(ref(db, `users/${uid}`), { preferences });
-    };
-
-    window.createLoop = () => {
-      const uid = auth.currentUser.uid;
-      const loop = {
-        title: loopTitle.value,
-        location: loopLocation.value,
-        max: parseInt(loopMax.value),
-        tags: loopTags.value.split(",").map(t => t.trim().toLowerCase()),
-        participants: [uid]
-      };
-      push(ref(db, "loops"), loop);
-    };
-
-    window.loadMyLoops = () => {
-      const uid = auth.currentUser.uid;
-      const myList = document.getElementById("myLoops");
-      myList.innerHTML = "";
-      onValue(ref(db, "loops"), snapshot => {
-        myList.innerHTML = "";
-        snapshot.forEach(child => {
-          const loop = child.val();
-          if (loop.participants?.includes(uid)) {
-            const li = document.createElement("li");
-            li.textContent = `${loop.title} (${loop.location})`;
-            myList.appendChild(li);
-          }
-        });
-      });
-    };
-
-    window.matchLoopsAI = () => {
-      const uid = auth.currentUser.uid;
-      onValue(ref(db, `users/${uid}/preferences`), snapshot => {
-        const prefs = snapshot.val();
-        if (!prefs) return;
-        const list = document.getElementById("matchedLoops");
-        list.innerHTML = "";
-        onValue(ref(db, "loops"), snap => {
-          list.innerHTML = "";
-          snap.forEach(child => {
-            const loop = child.val();
-            if ((loop.participants?.length || 0) >= loop.max) return;
-            const common = loop.tags.filter(tag => prefs.activities.includes(tag));
-            if (common.length > 0) {
-              const li = document.createElement("li");
-              li.textContent = `${loop.title} - ${loop.location}`;
-              const btn = document.createElement("button");
-              btn.textContent = "Join";
-              btn.onclick = () => joinLoop(child.key);
-              li.appendChild(btn);
-              list.appendChild(li);
-            }
-          });
-        });
-      });
-    };
-
-    const joinLoop = (loopId) => {
-      const uid = auth.currentUser.uid;
-      const loopRef = ref(db, `loops/${loopId}`);
-      onValue(loopRef, snap => {
-        const loop = snap.val();
-        if (!loop || loop.participants?.includes(uid)) return;
-        const updated = loop.participants || [];
-        updated.push(uid);
-        update(loopRef, { participants: updated });
-      }, { onlyOnce: true });
-    };
-
-    window.loadUserProfile = () => {
-      const uid = auth.currentUser.uid;
-      onValue(ref(db, `users/${uid}`), snap => {
-        const user = snap.val();
-        username.value = user.username || "";
-        photoUrl.value = user.photoUrl || "";
-        userName.textContent = user.username || "";
-        userPhoto.src = user.photoUrl || "";
-        if (user.preferences) {
-          prefClimate.value = user.preferences.climate || "";
-          prefPace.value = user.preferences.pace || "";
-          prefBudget.value = user.preferences.budget || "";
-          prefActivities.value = (user.preferences.activities || []).join(", ");
-        }
-      });
-    };
-  </script>
 </body>
 </html>
