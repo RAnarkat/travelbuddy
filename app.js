@@ -12,8 +12,7 @@ import {
   ref,
   set,
   push,
-  onValue,
-  update
+  onValue
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -30,21 +29,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-export function showTab(id) {
+const showTab = (id) => {
   document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-  const target = document.getElementById(id);
-  if (target) {
-    target.style.display = "block";
-    if (id === "loopTab") {
-      loadMyLoops();
-      matchLoopsAI();
-    } else if (id === "userProfile") {
-      loadUserProfile();
-    }
-  } else {
-    console.error("Tab not found:", id);
+  document.getElementById(id).style.display = "block";
+
+  if (id === "loopTab") {
+    loadMyLoops();
+    matchLoopsAI();
+  } else if (id === "userProfile") {
+    loadUserProfile();
   }
-}
+};
 
 onAuthStateChanged(auth, user => {
   if (user) {
@@ -52,7 +47,15 @@ onAuthStateChanged(auth, user => {
     document.getElementById("navBar").style.display = "flex";
     document.getElementById("userDisplay").style.display = "flex";
     showTab("loopTab");
-    loadUserProfile();
+
+    const userRef = ref(db, `users/${user.uid}`);
+    onValue(userRef, snap => {
+      const data = snap.val();
+      if (data) {
+        document.getElementById("userName").textContent = data.username || "User";
+        document.getElementById("userPhoto").src = data.photoUrl || "";
+      }
+    }, { onlyOnce: true });
   } else {
     document.getElementById("authSection").style.display = "block";
     document.getElementById("navBar").style.display = "none";
@@ -73,15 +76,21 @@ window.register = () => {
   const username = document.getElementById("regUsername").value;
   const photoUrl = document.getElementById("regPhotoUrl").value;
 
-  createUserWithEmailAndPassword(auth, email, password).then(cred => {
-    const userRef = ref(db, `users/${cred.user.uid}`);
-    set(userRef, {
-      email,
-      username,
-      photoUrl,
-      joined: new Date().toISOString()
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      const uid = userCredential.user.uid;
+      const userRef = ref(db, `users/${uid}`);
+      set(userRef, {
+        email,
+        username,
+        photoUrl,
+        joined: new Date().toISOString()
+      });
+      signInWithEmailAndPassword(auth, email, password);
+    })
+    .catch((error) => {
+      alert(error.message);
     });
-  }).catch(alert);
 };
 
 window.logout = () => {
@@ -92,12 +101,11 @@ window.saveProfileInfo = () => {
   const uid = auth.currentUser.uid;
   const username = document.getElementById("username").value;
   const photoUrl = document.getElementById("photoUrl").value;
-  const updates = {
+  const userRef = ref(db, `users/${uid}`);
+  set(userRef, {
+    email: auth.currentUser.email,
     username,
     photoUrl
-  };
-  update(ref(db, `users/${uid}`), updates).then(() => {
-    loadUserProfile();
   });
 };
 
@@ -128,6 +136,7 @@ window.createLoop = () => {
 window.loadMyLoops = () => {
   const uid = auth.currentUser.uid;
   const myList = document.getElementById("myLoops");
+  myList.innerHTML = "";
   onValue(ref(db, "loops"), snapshot => {
     myList.innerHTML = "";
     snapshot.forEach(child => {
@@ -178,7 +187,7 @@ const joinLoop = (loopId) => {
     if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
     const updated = loop.participants || [];
     updated.push(auth.currentUser.uid);
-    update(loopRef, { participants: updated });
+    set(ref(db, `loops/${loopId}/participants`), updated);
   }, { onlyOnce: true });
 };
 
@@ -187,7 +196,13 @@ window.loadUserProfile = () => {
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
     if (!user) return;
-    document.getElementById("userName").textContent = user.username || "User";
-    document.getElementById("userPhoto").src = user.photoUrl || "";
+    document.getElementById("username").value = user.username || "";
+    document.getElementById("photoUrl").value = user.photoUrl || "";
+    if (user.preferences) {
+      document.getElementById("prefClimate").value = user.preferences.climate || "warm";
+      document.getElementById("prefPace").value = user.preferences.pace || "relaxed";
+      document.getElementById("prefBudget").value = user.preferences.budget || "low";
+      document.getElementById("prefActivities").value = user.preferences.activities?.join(", ") || "";
+    }
   });
 };
