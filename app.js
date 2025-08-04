@@ -30,7 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-export function showTab(id) {
+export const showTab = (id) => {
   document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
   document.getElementById(id).style.display = "block";
 
@@ -40,16 +40,18 @@ export function showTab(id) {
   } else if (id === "userProfile") {
     loadUserProfile();
   }
-}
+};
 
 onAuthStateChanged(auth, user => {
   if (user) {
     document.getElementById("authSection").style.display = "none";
     document.getElementById("navBar").style.display = "flex";
     showTab("loopTab");
+    loadUserProfile();
   } else {
     document.getElementById("authSection").style.display = "block";
     document.getElementById("navBar").style.display = "none";
+    document.getElementById("userDisplay").style.display = "none";
     showTab("authSection");
   }
 });
@@ -67,13 +69,23 @@ window.signup = () => {
     const userRef = ref(db, `users/${cred.user.uid}`);
     set(userRef, {
       email,
-      joined: new Date().toISOString()
+      joined: new Date().toISOString(),
+      username: "",
+      photoUrl: ""
     });
   }).catch(alert);
 };
 
 window.logout = () => {
   signOut(auth);
+};
+
+window.saveProfileInfo = () => {
+  const uid = auth.currentUser.uid;
+  const username = document.getElementById("username").value;
+  const photoUrl = document.getElementById("photoUrl").value;
+  const userRef = ref(db, `users/${uid}`);
+  update(userRef, { username, photoUrl });
 };
 
 window.savePreferences = () => {
@@ -154,7 +166,7 @@ const joinLoop = (loopId) => {
     if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
     const updated = loop.participants || [];
     updated.push(auth.currentUser.uid);
-    update(ref(db, `loops/${loopId}`), { participants: updated });
+    update(loopRef, { participants: updated });
   }, { onlyOnce: true });
 };
 
@@ -162,8 +174,18 @@ window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
-    document.getElementById("userEmail").textContent = `Email: ${user.email}`;
-    document.getElementById("joinDate").textContent = `Joined: ${new Date(user.joined).toLocaleDateString()}`;
+    document.getElementById("username").value = user.username || "";
+    document.getElementById("photoUrl").value = user.photoUrl || "";
+
+    const userDisplay = document.getElementById("userDisplay");
+    const userPhoto = document.getElementById("userPhoto");
+    const userName = document.getElementById("userName");
+
+    if (userDisplay && userPhoto && userName) {
+      userDisplay.style.display = "flex";
+      userPhoto.src = user.photoUrl || "https://via.placeholder.com/40";
+      userName.textContent = user.username || "My Profile";
+    }
 
     const prefsDiv = document.getElementById("userPrefs");
     prefsDiv.innerHTML = "";
@@ -172,12 +194,6 @@ window.loadUserProfile = () => {
         const p = document.createElement("p");
         p.textContent = `${key}: ${Array.isArray(val) ? val.join(", ") : val}`;
         prefsDiv.appendChild(p);
-
-        // Update UI form values to reflect existing prefs
-        if (key === "climate") document.getElementById("prefClimate").value = val;
-        if (key === "pace") document.getElementById("prefPace").value = val;
-        if (key === "budget") document.getElementById("prefBudget").value = val;
-        if (key === "activities") document.getElementById("prefActivities").value = val.join(", ");
       });
     }
   });
