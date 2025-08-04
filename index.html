@@ -19,7 +19,7 @@
       text-align: center;
     }
     nav {
-      display: none;
+      display: flex;
       justify-content: center;
       background-color: #dce6f9;
       padding: 10px;
@@ -82,7 +82,7 @@
     <p>Connect. Travel. Share. Discover your next adventure with like-minded explorers.</p>
   </header>
 
-  <nav id="navBar">
+  <nav id="navBar" style="display: none;">
     <button onclick="showTab('loopTab')">Loops</button>
     <button onclick="showTab('profileSection')">Preferences</button>
     <button onclick="showTab('userProfile')">My Profile</button>
@@ -152,138 +152,7 @@
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getDatabase, ref, set, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-      authDomain: "loopmates-94b46.firebaseapp.com",
-      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-      projectId: "loopmates-94b46",
-      storageBucket: "loopmates-94b46.appspot.com",
-      messagingSenderId: "336997321934",
-      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-
-    const showTab = (id) => {
-      document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-      document.getElementById(id).style.display = "block";
-    };
-
-    const login = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password).catch(console.error);
-    };
-
-    const signup = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password).then(userCred => {
-        const user = userCred.user;
-        set(ref(db, "users/" + user.uid), {
-          email: user.email,
-          joined: new Date().toLocaleString()
-        });
-      }).catch(console.error);
-    };
-
-    const logout = () => {
-      signOut(auth);
-      document.getElementById("navBar").style.display = "none";
-      showTab("authSection");
-    };
-
-    const savePreferences = () => {
-      const prefs = {
-        climate: document.getElementById("prefClimate").value,
-        pace: document.getElementById("prefPace").value,
-        budget: document.getElementById("prefBudget").value,
-        activities: document.getElementById("prefActivities").value.split(",").map(x => x.trim().toLowerCase())
-      };
-      const user = auth.currentUser;
-      if (user) update(ref(db, "users/" + user.uid), { preferences: prefs });
-    };
-
-    const createLoop = () => {
-      const loop = {
-        title: document.getElementById("loopTitle").value,
-        location: document.getElementById("loopLocation").value,
-        max: parseInt(document.getElementById("loopMax").value),
-        tags: document.getElementById("loopTags").value.split(",").map(t => t.trim().toLowerCase()),
-        participants: [auth.currentUser.uid]
-      };
-      push(ref(db, "loops"), loop);
-    };
-
-    const matchLoopsAI = () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      onValue(ref(db, `users/${user.uid}/preferences`), snapshot => {
-        const prefs = snapshot.val();
-        onValue(ref(db, "loops"), loopsSnap => {
-          const matched = [];
-          loopsSnap.forEach(loopSnap => {
-            const loop = loopSnap.val();
-            const common = loop.tags.filter(t => prefs.activities.includes(t));
-            if (common.length > 0 && loop.participants.length < loop.max) {
-              matched.push(`<li>${loop.title} (${loop.location}) - Tags: ${loop.tags.join(", ")}</li>`);
-            }
-          });
-          document.getElementById("matchedLoops").innerHTML = matched.join("");
-        });
-      });
-    };
-
-    const loadMyLoops = () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      onValue(ref(db, "loops"), snapshot => {
-        const list = [];
-        snapshot.forEach(snap => {
-          const loop = snap.val();
-          if (loop.participants.includes(user.uid)) {
-            const status = loop.participants.length >= loop.max ? " (All Booked)" : "";
-            list.push(`<li>${loop.title} (${loop.location})${status}</li>`);
-          }
-        });
-        document.getElementById("myLoops").innerHTML = list.join("");
-      });
-    };
-
-    const loadUserProfile = () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      get(ref(db, `users/${user.uid}`)).then(snapshot => {
-        const data = snapshot.val();
-        document.getElementById("userEmail").innerText = `Email: ${data.email}`;
-        document.getElementById("joinDate").innerText = `Joined: ${data.joined}`;
-        const prefs = data.preferences || {};
-        document.getElementById("userPrefs").innerHTML = `
-          Climate: ${prefs.climate || "N/A"}<br>
-          Pace: ${prefs.pace || "N/A"}<br>
-          Budget: ${prefs.budget || "N/A"}<br>
-          Activities: ${(prefs.activities || []).join(", ")}
-        `;
-      });
-    };
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        document.getElementById("navBar").style.display = "flex";
-        showTab("loopTab");
-        loadMyLoops();
-        loadUserProfile();
-      } else {
-        showTab("authSection");
-        document.getElementById("navBar").style.display = "none";
-      }
-    });
+    import "./app.js";
   </script>
 </body>
 </html>
