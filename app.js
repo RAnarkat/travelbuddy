@@ -67,6 +67,23 @@ window.login = () => {
   signInWithEmailAndPassword(auth, email, password).catch(alert);
 };
 
+window.register = () => {
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+  const username = document.getElementById("regUsername").value;
+  const photoUrl = document.getElementById("regPhotoUrl").value;
+
+  createUserWithEmailAndPassword(auth, email, password).then(cred => {
+    const userRef = ref(db, `users/${cred.user.uid}`);
+    set(userRef, {
+      email,
+      username,
+      photoUrl,
+      joined: new Date().toISOString()
+    });
+  }).catch(alert);
+};
+
 window.logout = () => {
   signOut(auth);
 };
