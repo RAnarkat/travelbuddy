@@ -60,7 +60,7 @@
     button:hover {
       background-color: #005fa3;
     }
-    #authSection, #profileSection, #loopTab, #userProfile {
+    #authSection, #loopTab, #userProfile {
       display: none;
     }
     ul {
@@ -84,7 +84,6 @@
 
   <nav id="navBar" style="display: none;">
     <button onclick="showTab('loopTab')">Loops</button>
-    <button onclick="showTab('profileSection')">Preferences</button>
     <button onclick="showTab('userProfile')">My Profile</button>
     <button onclick="logout()">Logout</button>
   </nav>
@@ -115,8 +114,12 @@
       <button onclick="matchLoopsAI()">Find Matched Loops</button>
     </div>
 
-    <div id="profileSection">
-      <h2>Profile Preferences</h2>
+    <div id="userProfile">
+      <h2>User Profile</h2>
+      <p id="userEmail"></p>
+      <p id="joinDate"></p>
+
+      <h3>Edit Preferences</h3>
       <label for="prefClimate">Preferred Climate:</label>
       <select id="prefClimate">
         <option value="warm">Warm</option>
@@ -140,13 +143,8 @@
 
       <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
       <button onclick="savePreferences()">Save Preferences</button>
-    </div>
 
-    <div id="userProfile">
-      <h2>User Profile</h2>
-      <p id="userEmail"></p>
-      <p id="joinDate"></p>
-      <h3>Preferences</h3>
+      <h3>Current Preferences</h3>
       <div id="userPrefs"></div>
     </div>
   </main>
