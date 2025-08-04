@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoopMeets</title>
   <style>
     body {
@@ -18,13 +18,13 @@
       padding: 15px;
       text-align: center;
     }
-    nav {
+    #navButtons {
       display: none;
       justify-content: center;
       background-color: #dce6f9;
       padding: 10px;
     }
-    nav button {
+    #navButtons button {
       margin: 0 10px;
       padding: 10px 15px;
       border: none;
@@ -33,7 +33,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    nav button:hover {
+    #navButtons button:hover {
       background-color: #005fa3;
     }
     main {
@@ -60,7 +60,7 @@
     button:hover {
       background-color: #005fa3;
     }
-    #authSection, #profileSection, #loopTab {
+    #authSection, #profileSection, #loopTab, #userProfilePage {
       display: none;
     }
     ul {
@@ -79,30 +79,30 @@
 <body>
   <header>
     <h1>LoopMeets</h1>
-    <p>Find your perfect travel buddy. Discover. Connect. Explore.</p>
   </header>
 
-  <nav id="mainNav">
+  <div id="navButtons">
     <button onclick="showTab('loopTab')">Loops</button>
-    <button onclick="showTab('profileSection')">Profile</button>
+    <button onclick="showTab('profileSection')">Preferences</button>
+    <button onclick="showTab('userProfilePage')">My Profile</button>
     <button onclick="logout()">Logout</button>
-  </nav>
+  </div>
 
   <main>
     <div id="authSection">
       <h2>Login or Sign Up</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
       <button onclick="login()">Login</button>
       <button onclick="signup()">Sign Up</button>
     </div>
 
     <div id="loopTab">
       <h2>Create a Loop</h2>
-      <input type="text" id="loopTitle" placeholder="Loop Title">
-      <input type="text" id="loopLocation" placeholder="Location">
-      <input type="number" id="loopMax" placeholder="Max People">
-      <input type="text" id="loopTags" placeholder="Tags (comma separated)">
+      <input type="text" id="loopTitle" placeholder="Loop Title" />
+      <input type="text" id="loopLocation" placeholder="Location" />
+      <input type="number" id="loopMax" placeholder="Max People" />
+      <input type="text" id="loopTags" placeholder="Tags (comma separated)" />
       <button onclick="createLoop()">Create Loop</button>
 
       <h3>Matched Loops</h3>
@@ -115,8 +115,7 @@
     </div>
 
     <div id="profileSection">
-      <h2>User Profile</h2>
-      <p id="profileInfo"></p>
+      <h2>Profile Preferences</h2>
       <label for="prefClimate">Preferred Climate:</label>
       <select id="prefClimate">
         <option value="warm">Warm</option>
@@ -138,8 +137,16 @@
         <option value="high">High</option>
       </select>
 
-      <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
+      <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)" />
       <button onclick="savePreferences()">Save Preferences</button>
+    </div>
+
+    <div id="userProfilePage">
+      <h2>User Profile</h2>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>User Since:</strong> <span id="userSince"></span></p>
+      <h3>Current Preferences</h3>
+      <ul id="userPrefsList"></ul>
     </div>
   </main>
 
@@ -170,32 +177,22 @@
     const login = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          document.getElementById("mainNav").style.display = "flex";
-          showTab("loopTab");
-        })
-        .catch(console.error);
+      signInWithEmailAndPassword(auth, email, password).then(() => {
+        showTab("loopTab");
+        document.getElementById("navButtons").style.display = "flex";
+      }).catch(console.error);
     };
 
     const signup = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-          set(ref(db, "users/" + userCredential.user.uid), {
-            email: email,
-            joined: new Date().toISOString()
-          });
-          login();
-        })
-        .catch(console.error);
+      createUserWithEmailAndPassword(auth, email, password).catch(console.error);
     };
 
     const logout = () => {
       signOut(auth).then(() => {
-        document.getElementById("mainNav").style.display = "none";
         showTab("authSection");
+        document.getElementById("navButtons").style.display = "none";
       });
     };
 
@@ -208,26 +205,6 @@
       };
       const user = auth.currentUser;
       if (user) update(ref(db, "users/" + user.uid), { preferences: prefs });
-    };
-
-    const loadUserProfile = () => {
-      const user = auth.currentUser;
-      if (!user) return;
-      onValue(ref(db, "users/" + user.uid), snap => {
-        const data = snap.val();
-        if (!data) return;
-        document.getElementById("profileInfo").innerHTML = `
-          <strong>Email:</strong> ${data.email}<br>
-          <strong>Joined:</strong> ${new Date(data.joined).toLocaleDateString()}<br>
-          <strong>Preferences:</strong> ${JSON.stringify(data.preferences || {})}
-        `;
-        if (data.preferences) {
-          document.getElementById("prefClimate").value = data.preferences.climate || "";
-          document.getElementById("prefPace").value = data.preferences.pace || "";
-          document.getElementById("prefBudget").value = data.preferences.budget || "";
-          document.getElementById("prefActivities").value = data.preferences.activities?.join(", ") || "";
-        }
-      });
     };
 
     const createLoop = () => {
@@ -276,15 +253,32 @@
       });
     };
 
+    const loadUserProfile = () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      document.getElementById("userEmail").innerText = user.email;
+      document.getElementById("userSince").innerText = new Date(user.metadata.creationTime).toLocaleDateString();
+      onValue(ref(db, `users/${user.uid}/preferences`), snapshot => {
+        const prefs = snapshot.val();
+        const list = [
+          `Climate: ${prefs.climate}`,
+          `Pace: ${prefs.pace}`,
+          `Budget: ${prefs.budget}`,
+          `Activities: ${prefs.activities.join(", ")}`
+        ];
+        document.getElementById("userPrefsList").innerHTML = list.map(i => `<li>${i}</li>`).join("");
+      });
+    };
+
     onAuthStateChanged(auth, user => {
       if (user) {
-        document.getElementById("mainNav").style.display = "flex";
         showTab("loopTab");
+        document.getElementById("navButtons").style.display = "flex";
         loadMyLoops();
         loadUserProfile();
       } else {
-        document.getElementById("mainNav").style.display = "none";
         showTab("authSection");
+        document.getElementById("navButtons").style.display = "none";
       }
     });
   </script>
