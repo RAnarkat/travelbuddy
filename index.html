@@ -17,6 +17,19 @@
       color: white;
       padding: 15px;
       text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #userHeader {
+      display: flex;
+      align-items: center;
+    }
+    #userHeader img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-left: 10px;
     }
     nav {
       display: flex;
@@ -78,8 +91,14 @@
 </head>
 <body>
   <header>
-    <h1>LoopMeets</h1>
-    <p>Connect. Travel. Share. Discover your next adventure with like-minded explorers.</p>
+    <div>
+      <h1>LoopMeets</h1>
+      <p>Connect. Travel. Share. Discover your next adventure with like-minded explorers.</p>
+    </div>
+    <div id="userHeader" style="display: none;">
+      <span id="userName"></span>
+      <img id="userPhoto" src="" alt="User Photo">
+    </div>
   </header>
 
   <nav id="navBar" style="display: none;">
@@ -116,8 +135,9 @@
 
     <div id="userProfile">
       <h2>User Profile</h2>
-      <p id="userEmail"></p>
-      <p id="joinDate"></p>
+      <input type="text" id="username" placeholder="Username">
+      <input type="url" id="profilePhoto" placeholder="Profile Photo URL">
+      <button onclick="saveUserProfile()">Save Profile</button>
 
       <h3>Edit Preferences</h3>
       <label for="prefClimate">Preferred Climate:</label>
