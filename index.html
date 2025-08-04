@@ -11,28 +11,34 @@
       font-family: 'Inter', sans-serif;
       background-color: #f4f9ff;
       color: #1c1c1e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     header {
       background-color: #007bff;
       color: white;
       padding: 2rem;
       text-align: center;
+      width: 100%;
     }
     nav {
       display: flex;
+      justify-content: center;
       background: white;
       border-bottom: 1px solid #ccc;
       padding: 1rem;
       gap: 1rem;
-      align-items: center;
+      width: 100%;
     }
     nav button {
       background: #007bff;
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 1rem;
     }
     nav button:hover {
       background: #0056b3;
@@ -44,16 +50,27 @@
       border-radius: 6px;
       width: 100%;
       max-width: 400px;
+      font-size: 1rem;
     }
     main {
       padding: 2rem;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     h2, h3 {
       color: #007bff;
+      text-align: center;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
     }
     ul {
       list-style: none;
       padding-left: 0;
+      width: 100%;
+      max-width: 600px;
     }
     li {
       margin-bottom: 0.5rem;
@@ -73,78 +90,87 @@
       width: 40px;
       border-radius: 50%;
     }
+    .tab {
+      display: none;
+      width: 100%;
+    }
+    .visible {
+      display: block;
+    }
     @media (max-width: 600px) {
       nav {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
       }
     }
   </style>
-  <script type="module" src="app.js"></script>
 </head>
 <body>
   <header>
     <h1>LoopMeets</h1>
     <p>Find your perfect travel group, powered by AI.</p>
   </header>
-  <nav id="navBar" style="display: none;">
+
+  <nav>
     <button onclick="showTab('loopTab')">Loops</button>
     <button onclick="showTab('profileTab')">My Profile</button>
-    <div id="userDisplay"></div>
     <button onclick="logout()">Logout</button>
   </nav>
+
   <main>
-    <div id="authSection">
-      <h2>Welcome to LoopMeets</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
+    <div id="authSection" class="tab visible">
+      <h2>Login or Register</h2>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
       <button onclick="login()">Login</button>
       <button onclick="signup()">Register</button>
     </div>
 
-    <div id="loopTab" style="display: none;">
-      <h2>Create a Loop</h2>
-      <input type="text" id="loopTitle" placeholder="Loop Title">
-      <input type="text" id="loopLocation" placeholder="Location">
-      <input type="number" id="loopMax" placeholder="Max Participants">
-      <input type="text" id="loopTags" placeholder="Tags (comma separated)">
-      <button onclick="createLoop()">Create</button>
-
-      <h3>Matched Loops</h3>
+    <div id="loopTab" class="tab">
+      <h2>Your Loops</h2>
       <ul id="matchedLoops"></ul>
-
+      <h3>Create a Loop</h3>
+      <input id="loopTitle" placeholder="Loop Title" />
+      <input id="loopLocation" placeholder="Location" />
+      <input id="loopMax" type="number" placeholder="Max Participants" />
+      <input id="loopTags" placeholder="Tags (comma-separated)" />
+      <button onclick="createLoop()">Create Loop</button>
       <h3>My Loops</h3>
       <ul id="myLoops"></ul>
     </div>
 
-    <div id="profileTab" style="display: none;">
+    <div id="profileTab" class="tab">
       <h2>My Profile</h2>
-      <input type="text" id="username" placeholder="Username">
-      <input type="url" id="profilePhoto" placeholder="Profile Photo URL">
-      <button onclick="saveProfile()">Save Profile</button>
+      <input id="username" placeholder="Username" />
+      <input type="file" id="profilePhoto" accept="image/*" />
+      <button onclick="saveUserProfile()">Save Profile</button>
 
       <h3>Preferences</h3>
       <select id="prefClimate">
-        <option value="warm">Warm</option>
-        <option value="cold">Cold</option>
-        <option value="mild">Mild</option>
+        <option value="">Preferred Climate</option>
+        <option>Warm</option>
+        <option>Cold</option>
+        <option>Mild</option>
       </select>
       <select id="prefPace">
-        <option value="relaxed">Relaxed</option>
-        <option value="adventurous">Adventurous</option>
-        <option value="balanced">Balanced</option>
+        <option value="">Preferred Pace</option>
+        <option>Relaxed</option>
+        <option>Adventurous</option>
+        <option>Balanced</option>
       </select>
       <select id="prefBudget">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
+        <option value="">Preferred Budget</option>
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
       </select>
-      <input type="text" id="prefActivities" placeholder="Activities (comma separated)">
+      <input id="prefActivities" placeholder="Activities (comma-separated)" />
       <button onclick="savePreferences()">Save Preferences</button>
 
-      <h3>Saved Preferences</h3>
       <div id="userPrefs"></div>
     </div>
   </main>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
