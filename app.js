@@ -12,9 +12,17 @@ import {
   ref,
   set,
   push,
-  onValue
+  onValue,
+  update
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
   authDomain: "loopmates-94b46.firebaseapp.com",
@@ -26,41 +34,36 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+const auth = getAuth(app);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
-const showTab = (id) => {
-  document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-  document.getElementById(id).style.display = "block";
+function showTab(id) {
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.classList.remove("visible");
+  });
+  document.getElementById(id).classList.add("visible");
 
   if (id === "loopTab") {
     loadMyLoops();
     matchLoopsAI();
-  } else if (id === "userProfile") {
+  } else if (id === "profileTab") {
     loadUserProfile();
   }
-};
+}
+
+window.showTab = showTab;
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    document.getElementById("authSection").style.display = "none";
-    document.getElementById("navBar").style.display = "flex";
-    document.getElementById("userDisplay").style.display = "flex";
-    showTab("loopTab");
-
-    const userRef = ref(db, `users/${user.uid}`);
-    onValue(userRef, snap => {
-      const data = snap.val();
-      if (data) {
-        document.getElementById("userName").textContent = data.username || "User";
-        document.getElementById("userPhoto").src = data.photoUrl || "";
-      }
-    }, { onlyOnce: true });
+    document.getElementById("authSection").classList.remove("visible");
+    document.getElementById("loopTab").classList.add("visible");
+    document.querySelector("nav").style.display = "flex";
+    loadUserProfile();
   } else {
-    document.getElementById("authSection").style.display = "block";
-    document.getElementById("navBar").style.display = "none";
-    document.getElementById("userDisplay").style.display = "none";
-    showTab("authSection");
+    document.getElementById("authSection").classList.add("visible");
+    document.querySelector("nav").style.display = "none";
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
   }
 });
 
@@ -70,43 +73,20 @@ window.login = () => {
   signInWithEmailAndPassword(auth, email, password).catch(alert);
 };
 
-window.register = () => {
-  const email = document.getElementById("regEmail").value;
-  const password = document.getElementById("regPassword").value;
-  const username = document.getElementById("regUsername").value;
-  const photoUrl = document.getElementById("regPhotoUrl").value;
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      const uid = userCredential.user.uid;
-      const userRef = ref(db, `users/${uid}`);
-      set(userRef, {
-        email,
-        username,
-        photoUrl,
-        joined: new Date().toISOString()
-      });
-      signInWithEmailAndPassword(auth, email, password);
-    })
-    .catch((error) => {
-      alert(error.message);
+window.signup = () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  createUserWithEmailAndPassword(auth, email, password).then(userCred => {
+    const uid = userCred.user.uid;
+    set(ref(db, `users/${uid}`), {
+      email,
+      joined: new Date().toISOString()
     });
+  }).catch(alert);
 };
 
 window.logout = () => {
   signOut(auth);
-};
-
-window.saveProfileInfo = () => {
-  const uid = auth.currentUser.uid;
-  const username = document.getElementById("username").value;
-  const photoUrl = document.getElementById("photoUrl").value;
-  const userRef = ref(db, `users/${uid}`);
-  set(userRef, {
-    email: auth.currentUser.email,
-    username,
-    photoUrl
-  });
 };
 
 window.savePreferences = () => {
@@ -181,14 +161,32 @@ window.matchLoopsAI = () => {
 };
 
 const joinLoop = (loopId) => {
-  const loopRef = ref(db, `loops/${loopId}`);
-  onValue(loopRef, snap => {
-    const loop = snap.val();
-    if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
+  const uid = auth.currentUser.uid;
+  const loopPath = `loops/${loopId}/participants`;
+  onValue(ref(db, `loops/${loopId}`), snapshot => {
+    const loop = snapshot.val();
+    if (!loop || loop.participants?.includes(uid)) return;
     const updated = loop.participants || [];
-    updated.push(auth.currentUser.uid);
-    set(ref(db, `loops/${loopId}/participants`), updated);
+    updated.push(uid);
+    set(ref(db, loopPath), updated);
   }, { onlyOnce: true });
+};
+
+window.saveUserProfile = async () => {
+  const uid = auth.currentUser.uid;
+  const username = document.getElementById("username").value;
+  const file = document.getElementById("profilePhoto").files[0];
+
+  const updates = { username };
+
+  if (file) {
+    const photoRef = storageRef(storage, `profile_photos/${uid}`);
+    await uploadBytes(photoRef, file);
+    const photoURL = await getDownloadURL(photoRef);
+    updates.photoURL = photoURL;
+  }
+
+  update(ref(db, `users/${uid}`), updates);
 };
 
 window.loadUserProfile = () => {
@@ -196,13 +194,28 @@ window.loadUserProfile = () => {
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
     if (!user) return;
+
     document.getElementById("username").value = user.username || "";
-    document.getElementById("photoUrl").value = user.photoUrl || "";
+    if (user.photoURL) {
+      const img = document.getElementById("userPhoto");
+      if (img) {
+        img.src = user.photoURL;
+      } else {
+        const newImg = document.createElement("img");
+        newImg.src = user.photoURL;
+        newImg.id = "userPhoto";
+        document.querySelector("nav").appendChild(newImg);
+      }
+    }
+
+    const prefsDiv = document.getElementById("userPrefs");
+    prefsDiv.innerHTML = "";
     if (user.preferences) {
-      document.getElementById("prefClimate").value = user.preferences.climate || "warm";
-      document.getElementById("prefPace").value = user.preferences.pace || "relaxed";
-      document.getElementById("prefBudget").value = user.preferences.budget || "low";
-      document.getElementById("prefActivities").value = user.preferences.activities?.join(", ") || "";
+      Object.entries(user.preferences).forEach(([key, val]) => {
+        const p = document.createElement("p");
+        p.textContent = `${key}: ${Array.isArray(val) ? val.join(", ") : val}`;
+        prefsDiv.appendChild(p);
+      });
     }
   });
 };
