@@ -6,25 +6,43 @@
   <title>LoopMeets</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #ffffff;
-      color: #1a1a1a;
+      font-family: Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
       margin: 0;
       padding: 0;
     }
     header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 20px;
+      background-color: #3366cc;
+      color: white;
+      padding: 15px;
       text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #e0e7ff;
+      padding: 10px;
+    }
+    nav button {
+      margin: 0 10px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #3366cc;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #264d99;
     }
     main {
       padding: 20px;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
     }
     h1, h2, h3 {
-      color: #007BFF;
+      color: #3366cc;
     }
     input, select, button {
       width: 100%;
@@ -35,211 +53,69 @@
       box-sizing: border-box;
     }
     button {
-      background-color: #007BFF;
+      background-color: #3366cc;
       color: #fff;
-      border: none;
       font-weight: bold;
-      cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #264d99;
+    }
+    #authSection, #profileSection, #loopTab {
+      display: none;
     }
     ul {
       list-style: none;
       padding: 0;
     }
     ul li {
-      background-color: #f7f7f7;
+      background-color: #fff;
       margin: 5px 0;
       padding: 10px;
       border-radius: 4px;
-    }
-    #authSection, #loopSection {
-      margin-top: 20px;
-    }
-    #profileSection {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f2f2f2;
-      border-radius: 6px;
-    }
-    .logout-btn {
-      background-color: #e74c3c;
-      margin-top: 10px;
-    }
-    .logout-btn:hover {
-      background-color: #c0392b;
+      border: 1px solid #ddd;
     }
   </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      push,
-      set,
-      onValue,
-      get,
-      child
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-      authDomain: "loopmates-94b46.firebaseapp.com",
-      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-      projectId: "loopmates-94b46",
-      storageBucket: "loopmates-94b46.appspot.com",
-      messagingSenderId: "336997321934",
-      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getDatabase();
-
-    const authSection = document.getElementById('authSection');
-    const loopSection = document.getElementById('loopSection');
-    const matchedLoopsEl = document.getElementById('matchedLoops');
-    const myLoopsEl = document.getElementById('myLoops');
-
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => location.reload())
-        .catch(error => alert(error.message));
-    }
-
-    function signup() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(() => location.reload())
-        .catch(error => alert(error.message));
-    }
-
-    function logout() {
-      signOut(auth).then(() => location.reload());
-    }
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        authSection.style.display = 'none';
-        loopSection.style.display = 'block';
-        loadMyLoops(user.uid);
-      } else {
-        authSection.style.display = 'block';
-        loopSection.style.display = 'none';
-      }
-    });
-
-    function createLoop() {
-      const title = document.getElementById('loopTitle').value;
-      const location = document.getElementById('loopLocation').value;
-      const max = parseInt(document.getElementById('loopMax').value);
-      const tags = document.getElementById('loopTags').value.split(',').map(t => t.trim().toLowerCase());
-      const prefClimate = document.getElementById('prefClimate').value;
-      const prefPace = document.getElementById('prefPace').value;
-      const prefBudget = document.getElementById('prefBudget').value;
-      const prefActivities = document.getElementById('prefActivities').value.split(',').map(t => t.trim().toLowerCase());
-      const user = auth.currentUser;
-      const loopRef = push(ref(db, 'loops'));
-      set(loopRef, {
-        title,
-        location,
-        max,
-        tags,
-        createdBy: user.uid,
-        participants: [user.uid],
-        preferences: { climate: prefClimate, pace: prefPace, budget: prefBudget, activities: prefActivities }
-      });
-    }
-
-    function matchLoopsAI() {
-      const prefClimate = document.getElementById('prefClimate').value;
-      const prefPace = document.getElementById('prefPace').value;
-      const prefBudget = document.getElementById('prefBudget').value;
-      const prefActivities = document.getElementById('prefActivities').value.split(',').map(t => t.trim().toLowerCase());
-      const user = auth.currentUser;
-      get(ref(db, 'loops')).then(snapshot => {
-        matchedLoopsEl.innerHTML = '';
-        snapshot.forEach(child => {
-          const loop = child.val();
-          const match =
-            loop.preferences.climate === prefClimate &&
-            loop.preferences.pace === prefPace &&
-            loop.preferences.budget === prefBudget &&
-            prefActivities.some(a => loop.preferences.activities.includes(a));
-          if (match) {
-            const li = document.createElement('li');
-            li.textContent = `${loop.title} in ${loop.location} ${loop.participants.length >= loop.max ? '(ALL BOOKED)' : ''}`;
-            if (loop.participants.includes(user.uid)) {
-              li.style.fontWeight = 'bold';
-            } else if (loop.participants.length < loop.max) {
-              const joinBtn = document.createElement('button');
-              joinBtn.textContent = 'Join';
-              joinBtn.onclick = () => {
-                loop.participants.push(user.uid);
-                set(ref(db, 'loops/' + child.key), loop);
-                loadMyLoops(user.uid);
-              };
-              li.appendChild(joinBtn);
-            }
-            matchedLoopsEl.appendChild(li);
-          }
-        });
-      });
-    }
-
-    function loadMyLoops(uid) {
-      get(ref(db, 'loops')).then(snapshot => {
-        myLoopsEl.innerHTML = '';
-        snapshot.forEach(child => {
-          const loop = child.val();
-          if (loop.participants && loop.participants.includes(uid)) {
-            const li = document.createElement('li');
-            li.textContent = `${loop.title} in ${loop.location}`;
-            myLoopsEl.appendChild(li);
-          }
-        });
-      });
-    }
-
-    window.login = login;
-    window.signup = signup;
-    window.logout = logout;
-    window.createLoop = createLoop;
-    window.matchLoopsAI = matchLoopsAI;
-  </script>
 </head>
 <body>
   <header>
     <h1>LoopMeets</h1>
   </header>
+
+  <nav>
+    <button onclick="showTab('authSection')">Login</button>
+    <button onclick="showTab('loopTab')">Loops</button>
+    <button onclick="showTab('profileSection')">Profile</button>
+    <button onclick="logout()">Logout</button>
+  </nav>
+
   <main>
     <div id="authSection">
+      <h2>Login or Sign Up</h2>
       <input type="email" id="email" placeholder="Email">
       <input type="password" id="password" placeholder="Password">
       <button onclick="login()">Login</button>
       <button onclick="signup()">Sign Up</button>
     </div>
 
-    <div id="loopSection" style="display:none">
-      <button class="logout-btn" onclick="logout()">Logout</button>
+    <div id="loopTab">
       <h2>Create a Loop</h2>
       <input type="text" id="loopTitle" placeholder="Loop Title">
       <input type="text" id="loopLocation" placeholder="Location">
       <input type="number" id="loopMax" placeholder="Max People">
       <input type="text" id="loopTags" placeholder="Tags (comma separated)">
+      <button onclick="createLoop()">Create Loop</button>
 
-      <h3>Your Travel Preferences</h3>
+      <h3>Matched Loops</h3>
+      <ul id="matchedLoops"></ul>
+
+      <h3>My Loops</h3>
+      <ul id="myLoops"></ul>
+
+      <button onclick="matchLoopsAI()">Find Matched Loops</button>
+    </div>
+
+    <div id="profileSection">
+      <h2>Profile Preferences</h2>
       <label for="prefClimate">Preferred Climate:</label>
       <select id="prefClimate">
         <option value="warm">Warm</option>
@@ -262,18 +138,113 @@
       </select>
 
       <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
-
-      <button onclick="createLoop()">Create Loop</button>
-      <button onclick="matchLoopsAI()">Find Matched Loops</button>
-
-      <h3>Matched Loops:</h3>
-      <ul id="matchedLoops"></ul>
-
-      <div id="profileSection">
-        <h3>My Loops</h3>
-        <ul id="myLoops"></ul>
-      </div>
+      <button onclick="savePreferences()">Save Preferences</button>
     </div>
   </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
+      authDomain: "loopmates-94b46.firebaseapp.com",
+      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
+      projectId: "loopmates-94b46",
+      storageBucket: "loopmates-94b46.appspot.com",
+      messagingSenderId: "336997321934",
+      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const showTab = (id) => {
+      document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    };
+
+    const login = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password).catch(console.error);
+    };
+
+    const signup = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password).catch(console.error);
+    };
+
+    const logout = () => signOut(auth);
+
+    const savePreferences = () => {
+      const prefs = {
+        climate: document.getElementById("prefClimate").value,
+        pace: document.getElementById("prefPace").value,
+        budget: document.getElementById("prefBudget").value,
+        activities: document.getElementById("prefActivities").value.split(",").map(x => x.trim().toLowerCase())
+      };
+      const user = auth.currentUser;
+      if (user) update(ref(db, "users/" + user.uid), { preferences: prefs });
+    };
+
+    const createLoop = () => {
+      const loop = {
+        title: document.getElementById("loopTitle").value,
+        location: document.getElementById("loopLocation").value,
+        max: parseInt(document.getElementById("loopMax").value),
+        tags: document.getElementById("loopTags").value.split(",").map(t => t.trim().toLowerCase()),
+        participants: [auth.currentUser.uid]
+      };
+      push(ref(db, "loops"), loop);
+    };
+
+    const matchLoopsAI = () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      onValue(ref(db, `users/${user.uid}/preferences`), snapshot => {
+        const prefs = snapshot.val();
+        onValue(ref(db, "loops"), loopsSnap => {
+          const matched = [];
+          loopsSnap.forEach(loopSnap => {
+            const loop = loopSnap.val();
+            const common = loop.tags.filter(t => prefs.activities.includes(t));
+            if (common.length > 0 && loop.participants.length < loop.max) {
+              matched.push(`<li>${loop.title} (${loop.location}) - Tags: ${loop.tags.join(", ")}</li>`);
+            }
+          });
+          document.getElementById("matchedLoops").innerHTML = matched.join("");
+        });
+      });
+    };
+
+    const loadMyLoops = () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      onValue(ref(db, "loops"), snapshot => {
+        const list = [];
+        snapshot.forEach(snap => {
+          const loop = snap.val();
+          if (loop.participants.includes(user.uid)) {
+            const status = loop.participants.length >= loop.max ? " (All Booked)" : "";
+            list.push(`<li>${loop.title} (${loop.location})${status}</li>`);
+          }
+        });
+        document.getElementById("myLoops").innerHTML = list.join("");
+      });
+    };
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        showTab("loopTab");
+        loadMyLoops();
+      } else {
+        showTab("authSection");
+      }
+    });
+  </script>
 </body>
 </html>
