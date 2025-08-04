@@ -30,17 +30,21 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-const showTab = (id) => {
+export function showTab(id) {
   document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-  document.getElementById(id).style.display = "block";
-
-  if (id === "loopTab") {
-    loadMyLoops();
-    matchLoopsAI();
-  } else if (id === "userProfile") {
-    loadUserProfile();
+  const target = document.getElementById(id);
+  if (target) {
+    target.style.display = "block";
+    if (id === "loopTab") {
+      loadMyLoops();
+      matchLoopsAI();
+    } else if (id === "userProfile") {
+      loadUserProfile();
+    }
+  } else {
+    console.error("Tab not found:", id);
   }
-};
+}
 
 onAuthStateChanged(auth, user => {
   if (user) {
@@ -63,20 +67,21 @@ window.login = () => {
   signInWithEmailAndPassword(auth, email, password).catch(alert);
 };
 
-window.signup = () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  createUserWithEmailAndPassword(auth, email, password).then(cred => {
-    const userRef = ref(db, `users/${cred.user.uid}`);
-    set(userRef, {
-      email,
-      joined: new Date().toISOString()
-    });
-  }).catch(alert);
-};
-
 window.logout = () => {
   signOut(auth);
+};
+
+window.saveProfileInfo = () => {
+  const uid = auth.currentUser.uid;
+  const username = document.getElementById("username").value;
+  const photoUrl = document.getElementById("photoUrl").value;
+  const updates = {
+    username,
+    photoUrl
+  };
+  update(ref(db, `users/${uid}`), updates).then(() => {
+    loadUserProfile();
+  });
 };
 
 window.savePreferences = () => {
@@ -89,19 +94,6 @@ window.savePreferences = () => {
     activities: document.getElementById("prefActivities").value.split(",").map(s => s.trim().toLowerCase())
   };
   set(prefRef, preferences);
-};
-
-window.saveProfileInfo = () => {
-  const uid = auth.currentUser.uid;
-  const userRef = ref(db, `users/${uid}`);
-  const username = document.getElementById("username").value;
-  const photoUrl = document.getElementById("photoUrl").value;
-  update(userRef, {
-    username,
-    photoUrl
-  });
-  document.getElementById("userName").textContent = username;
-  document.getElementById("userPhoto").src = photoUrl;
 };
 
 window.createLoop = () => {
@@ -119,7 +111,6 @@ window.createLoop = () => {
 window.loadMyLoops = () => {
   const uid = auth.currentUser.uid;
   const myList = document.getElementById("myLoops");
-  myList.innerHTML = "";
   onValue(ref(db, "loops"), snapshot => {
     myList.innerHTML = "";
     snapshot.forEach(child => {
@@ -164,13 +155,12 @@ window.matchLoopsAI = () => {
 };
 
 const joinLoop = (loopId) => {
-  const uid = auth.currentUser.uid;
   const loopRef = ref(db, `loops/${loopId}`);
   onValue(loopRef, snap => {
     const loop = snap.val();
-    if (!loop || loop.participants?.includes(uid)) return;
+    if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
     const updated = loop.participants || [];
-    updated.push(uid);
+    updated.push(auth.currentUser.uid);
     update(loopRef, { participants: updated });
   }, { onlyOnce: true });
 };
@@ -179,21 +169,8 @@ window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
-    if (user.username) {
-      document.getElementById("userName").textContent = user.username;
-    }
-    if (user.photoUrl) {
-      document.getElementById("userPhoto").src = user.photoUrl;
-    }
-
-    document.getElementById("username").value = user.username || "";
-    document.getElementById("photoUrl").value = user.photoUrl || "";
-
-    if (user.preferences) {
-      document.getElementById("prefClimate").value = user.preferences.climate || "";
-      document.getElementById("prefPace").value = user.preferences.pace || "";
-      document.getElementById("prefBudget").value = user.preferences.budget || "";
-      document.getElementById("prefActivities").value = user.preferences.activities?.join(", ") || "";
-    }
+    if (!user) return;
+    document.getElementById("userName").textContent = user.username || "User";
+    document.getElementById("userPhoto").src = user.photoUrl || "";
   });
 };
