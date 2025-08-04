@@ -7,34 +7,34 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f7faff;
+      background-color: #e6f0ff;
       color: #333;
       margin: 0;
       padding: 0;
     }
     header {
-      background-color: #0077cc;
+      background-color: #004d99;
       color: white;
-      padding: 15px;
+      padding: 20px;
       text-align: center;
     }
     nav {
-      display: flex;
+      display: none;
       justify-content: center;
-      background-color: #dce6f9;
+      background-color: #cce0ff;
       padding: 10px;
     }
     nav button {
       margin: 0 10px;
       padding: 10px 15px;
       border: none;
-      background-color: #0077cc;
+      background-color: #004d99;
       color: white;
       border-radius: 5px;
       cursor: pointer;
     }
     nav button:hover {
-      background-color: #005fa3;
+      background-color: #003366;
     }
     main {
       padding: 20px;
@@ -42,7 +42,7 @@
       margin: auto;
     }
     h1, h2, h3 {
-      color: #0077cc;
+      color: #004d99;
     }
     input, select, button {
       width: 100%;
@@ -53,12 +53,12 @@
       box-sizing: border-box;
     }
     button {
-      background-color: #0077cc;
+      background-color: #004d99;
       color: #fff;
       font-weight: bold;
     }
     button:hover {
-      background-color: #005fa3;
+      background-color: #003366;
     }
     #authSection, #profileSection, #loopTab {
       display: none;
@@ -74,21 +74,35 @@
       border-radius: 4px;
       border: 1px solid #ddd;
     }
+    #homeScreen {
+      display: block;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #homeScreen h2 {
+      color: #004d99;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>LoopMeets</h1>
+    <p>Find your perfect travel companions — powered by AI.</p>
   </header>
 
-  <nav>
-    <button onclick="showTab('authSection')">Login</button>
+  <nav id="mainNav">
     <button onclick="showTab('loopTab')">Loops</button>
     <button onclick="showTab('profileSection')">Profile</button>
     <button onclick="logout()">Logout</button>
   </nav>
 
   <main>
+    <div id="homeScreen">
+      <h2>Welcome to LoopMeets</h2>
+      <p>Discover and join travel groups tailored to your personality, preferences, and dream destinations.</p>
+      <button onclick="showTab('authSection')">Login or Sign Up</button>
+    </div>
+
     <div id="authSection">
       <h2>Login or Sign Up</h2>
       <input type="email" id="email" placeholder="Email">
@@ -164,21 +178,24 @@
     const showTab = (id) => {
       document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
       document.getElementById(id).style.display = "block";
+      document.getElementById("mainNav").style.display = id === "loopTab" || id === "profileSection" ? "flex" : "none";
     };
 
     const login = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password).catch(console.error);
+      signInWithEmailAndPassword(auth, email, password).then(() => showTab("loopTab")).catch(console.error);
     };
 
     const signup = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password).catch(console.error);
+      createUserWithEmailAndPassword(auth, email, password).then(() => showTab("loopTab")).catch(console.error);
     };
 
-    const logout = () => signOut(auth);
+    const logout = () => {
+      signOut(auth).then(() => showTab("homeScreen"));
+    };
 
     const savePreferences = () => {
       const prefs = {
@@ -242,7 +259,7 @@
         showTab("loopTab");
         loadMyLoops();
       } else {
-        showTab("authSection");
+        showTab("homeScreen");
       }
     });
   </script>
