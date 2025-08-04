@@ -150,10 +150,17 @@
   </main>
 
   <script type="module">
-    import "./app.js";
+    import { showTab } from "./app.js";
 
-    document.getElementById("loopsBtn").addEventListener("click", () => showTab("loopTab"));
-    document.getElementById("profileBtn").addEventListener("click", () => showTab("userProfile"));
+    const profileBtn = document.getElementById("profileBtn");
+    if (profileBtn) {
+      profileBtn.addEventListener("click", () => showTab("userProfile"));
+    }
+
+    const loopsBtn = document.getElementById("loopsBtn");
+    if (loopsBtn) {
+      loopsBtn.addEventListener("click", () => showTab("loopTab"));
+    }
   </script>
 </body>
 </html>
