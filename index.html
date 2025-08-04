@@ -1,16 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoopMeets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #80deea);
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #006064;
+    }
+    input, select, button {
+      display: block;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #0097a7;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00796b;
+    }
+  </style>
 </head>
 <body>
   <h1>LoopMeets</h1>
 
   <div id="authSection">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Login</button>
     <button onclick="signup()">Sign Up</button>
     <button onclick="logout()">Logout</button>
@@ -18,10 +45,10 @@
 
   <div id="loopSection" style="display:none">
     <h2>Create a Loop</h2>
-    <input type="text" id="loopTitle" placeholder="Loop Title">
-    <input type="text" id="loopLocation" placeholder="Location">
-    <input type="number" id="loopMax" placeholder="Max People">
-    <input type="text" id="loopTags" placeholder="Tags (comma separated)">
+    <input type="text" id="loopTitle" placeholder="Loop Title" />
+    <input type="text" id="loopLocation" placeholder="Location" />
+    <input type="number" id="loopMax" placeholder="Max People" />
+    <input type="text" id="loopTags" placeholder="Tags (comma separated)" />
 
     <h3>Your Travel Preferences</h3>
     <label for="prefClimate">Preferred Climate:</label>
@@ -45,7 +72,7 @@
       <option value="high">High</option>
     </select>
 
-    <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
+    <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)" />
 
     <button onclick="createLoop()">Create Loop</button>
     <button onclick="matchLoopsAI()">Find Matched Loops</button>
@@ -62,8 +89,7 @@
       set,
       get,
       onValue,
-      push,
-      update
+      push
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
     import {
       getAuth,
@@ -141,7 +167,7 @@
       const userClimate = document.getElementById('prefClimate').value.toLowerCase();
       const userPace = document.getElementById('prefPace').value.toLowerCase();
       const userBudget = document.getElementById('prefBudget').value.toLowerCase();
-      const userActivities = document.getElementById('prefActivities').value.toLowerCase().split(/[\s,]+/).filter(Boolean);
+      const userActivities = document.getElementById('prefActivities').value.toLowerCase().split(/[,\s]+/).filter(Boolean);
       const expandedActivities = expandWithSynonyms(userActivities);
 
       const dbRef = ref(db, 'loops/');
