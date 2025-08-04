@@ -143,90 +143,71 @@
     const auth = getAuth(app);
 
     function showAuth() {
-      document.getElementById('auth').style.display = 'block';
-      document.getElementById('preferencesSection').style.display = 'none';
-      document.getElementById('profileSection').style.display = 'none';
-    }
-
-    function showProfile() {
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('preferencesSection').style.display = 'none';
-      document.getElementById('profileSection').style.display = 'block';
-    }
-
-    function register() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          set(ref(db, 'users/' + user.uid), {
-            email: user.email
-          });
-          alert('Registration successful!');
-          document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+      document.getElementById("auth").style.display = "block";
     }
 
     function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
       signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
-          document.getElementById('auth').style.display = 'none';
-          document.getElementById('preferencesSection').style.display = 'block';
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+        .then(userCredential => alert("Logged in!"))
+        .catch(error => alert(error.message));
+    }
+
+    function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredential => alert("Registered!"))
+        .catch(error => alert(error.message));
     }
 
     function logout() {
-      signOut(auth).then(() => {
-        document.getElementById('userWelcome').innerText = '';
-        document.getElementById('auth').style.display = 'block';
-        document.getElementById('preferencesSection').style.display = 'none';
-        document.getElementById('profileSection').style.display = 'none';
-      });
+      signOut(auth).then(() => alert("Logged out!"));
+    }
+
+    function showProfile() {
+      const user = auth.currentUser;
+      if (user) {
+        document.getElementById("profileSection").style.display = "block";
+        document.getElementById("profileEmail").textContent = user.email;
+      }
     }
 
     function savePreferences() {
-      const activity = document.getElementById('activity').value;
-      const tripLength = document.getElementById('tripLength').value;
-      const vibe = document.getElementById('vibe').value;
-      const groupSize = document.getElementById('groupSize').value;
-      const budget = document.getElementById('budget').value;
-      const destinations = document.getElementById('destinations').value;
-
       const user = auth.currentUser;
-      if (user) {
-        set(ref(db, 'preferences/' + user.uid), {
-          activity,
-          tripLength,
-          vibe,
-          groupSize,
-          budget,
-          destinations
-        });
-        alert('Preferences saved!');
-      }
+      if (!user) return;
+      const preferences = {
+        activity: document.getElementById("activity").value,
+        tripLength: document.getElementById("tripLength").value,
+        vibe: document.getElementById("vibe").value,
+        groupSize: document.getElementById("groupSize").value,
+        budget: document.getElementById("budget").value,
+        destinations: document.getElementById("destinations").value
+      };
+      set(ref(db, 'preferences/' + user.uid), preferences)
+        .then(() => alert("Preferences saved!"))
+        .catch(error => alert(error.message));
     }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, user => {
       if (user) {
-        document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('preferencesSection').style.display = 'block';
-        document.getElementById('profileEmail').innerText = user.email;
+        document.getElementById("userWelcome").textContent = `Welcome, ${user.email}`;
+        document.getElementById("preferencesSection").style.display = "block";
+        showProfile();
       } else {
-        document.getElementById('userWelcome').innerText = '';
+        document.getElementById("userWelcome").textContent = "";
+        document.getElementById("preferencesSection").style.display = "none";
+        document.getElementById("profileSection").style.display = "none";
       }
     });
+
+    window.login = login;
+    window.register = register;
+    window.logout = logout;
+    window.showAuth = showAuth;
+    window.showProfile = showProfile;
+    window.savePreferences = savePreferences;
   </script>
 </body>
 </html>
