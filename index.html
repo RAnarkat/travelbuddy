@@ -83,8 +83,8 @@
   </header>
 
   <nav id="navBar" style="display: none;">
-    <button onclick="showTab('loopTab')">Loops</button>
-    <button onclick="showTab('userProfile')">My Profile</button>
+    <button id="loopsBtn">Loops</button>
+    <button id="profileBtn">My Profile</button>
     <button onclick="logout()">Logout</button>
   </nav>
 
@@ -151,6 +151,9 @@
 
   <script type="module">
     import "./app.js";
+
+    document.getElementById("loopsBtn").addEventListener("click", () => showTab("loopTab"));
+    document.getElementById("profileBtn").addEventListener("click", () => showTab("userProfile"));
   </script>
 </body>
 </html>
