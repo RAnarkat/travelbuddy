@@ -3,24 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LoopMates.ai</title>
+  <title>LoopMeets.ai</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <script type="module">
-  import { initializeApp } from "firebase/app";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
-      authDomain: "loopmates-94b46.firebaseapp.com",
-      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
-      projectId: "loopmates-94b46",
-      storageBucket: "loopmates-94b46.firebasestorage.app",
-      messagingSenderId: "336997321934",
-      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    window.app = app;
-  </script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -90,7 +74,7 @@
 </head>
 <body>
   <header>
-    <h1>LoopMates.ai</h1>
+    <h1>LoopMeets.ai</h1>
     <p>Find short-term travel buddies for micro adventures.</p>
     <div id="userWelcome"></div>
     <button class="btn-primary" onclick="showAuth()">Login / Register</button>
@@ -136,138 +120,113 @@
   </section>
 
   <footer>
-    &copy; 2025 LoopMates.ai — Make friends, not just memories.
+    &copy; 2025 LoopMeets.ai — Make friends, not just memories.
   </footer>
 
   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
 
-    const db = getDatabase(window.app);
-    const auth = getAuth(window.app);
-
-    window.showProfile = () => {
-      const user = auth.currentUser;
-      if (!user) return alert("Please login first");
-      document.getElementById("profileSection").style.display = "block";
-      document.getElementById("profileEmail").textContent = user.email;
-
-      const joinedList = document.getElementById("joinedLoops");
-      joinedList.innerHTML = "";
-
-      onValue(ref(db, "loops"), snapshot => {
-        snapshot.forEach(child => {
-          const loop = child.val();
-          if (loop.attendees?.includes(user.uid)) {
-            const li = document.createElement("li");
-            li.textContent = loop.title + " – " + loop.time;
-            joinedList.appendChild(li);
-          }
-        });
-      }, { onlyOnce: true });
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
+      authDomain: "loopmates-94b46.firebaseapp.com",
+      databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
+      projectId: "loopmates-94b46",
+      storageBucket: "loopmates-94b46.firebasestorage.app",
+      messagingSenderId: "336997321934",
+      appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
     };
 
-    window.savePreferences = () => {
-      const user = auth.currentUser;
-      if (!user) return alert("Login first");
-      const prefs = {
-        activity: document.getElementById("activity").value,
-        tripLength: document.getElementById("tripLength").value,
-        vibe: document.getElementById("vibe").value,
-        groupSize: document.getElementById("groupSize").value,
-        budget: document.getElementById("budget").value,
-        destinations: document.getElementById("destinations").value
-      };
-      set(ref(db, `users/${user.uid}/preferences`), prefs);
-      alert("Preferences saved!");
-    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    function advancedMatchUserToLoops(userPrefs, allLoops) {
-      return allLoops
-        .map(loop => {
-          let score = 0;
-          const loopText = `${loop.title} ${loop.description || ''}`.toLowerCase();
-
-          if (loopText.includes(userPrefs.activity)) score += 2;
-          if (loopText.includes(userPrefs.vibe)) score += 2;
-
-          if (userPrefs.destinations) {
-            userPrefs.destinations
-              .toLowerCase()
-              .split(',')
-              .map(dest => dest.trim())
-              .forEach(dest => {
-                if (loopText.includes(dest)) score += 1.5;
-              });
-          }
-
-          const loopBudget = parseInt(loop.budget) || 0;
-          const userBudget = parseInt(userPrefs.budget) || 0;
-          if (userBudget && Math.abs(userBudget - loopBudget) <= 200) score += 1;
-
-          const loopGroupSize = parseInt(loop.groupSize) || 0;
-          const userGroupSize = parseInt(userPrefs.groupSize) || 0;
-          if (userGroupSize && Math.abs(userGroupSize - loopGroupSize) <= 2) score += 1;
-
-          const loopTripLength = parseInt(loop.tripLength) || 0;
-          const userTripLength = parseInt(userPrefs.tripLength) || 0;
-          if (userTripLength && Math.abs(userTripLength - loopTripLength) <= 2) score += 1;
-
-          return { ...loop, score };
-        })
-        .sort((a, b) => b.score - a.score)
-        .filter(loop => loop.score >= 3);
+    function showAuth() {
+      document.getElementById('auth').style.display = 'block';
+      document.getElementById('preferencesSection').style.display = 'none';
+      document.getElementById('profileSection').style.display = 'none';
     }
 
-    function displayMatches() {
-      const user = auth.currentUser;
-      if (!user) return;
-      onValue(ref(db, `users/${user.uid}/preferences`), snapshot => {
-        const prefs = snapshot.val();
-        if (!prefs) return;
-        onValue(ref(db, 'loops'), loopsSnap => {
-          const allLoops = [];
-          loopsSnap.forEach(loopSnap => allLoops.push(loopSnap.val()));
-          const matched = advancedMatchUserToLoops(prefs, allLoops);
+    function showProfile() {
+      document.getElementById('auth').style.display = 'none';
+      document.getElementById('preferencesSection').style.display = 'none';
+      document.getElementById('profileSection').style.display = 'block';
+    }
 
-          set(ref(db, `user-matches/${user.uid}`), matched);
-
-          const results = document.createElement('div');
-          results.innerHTML = `<h3>Matched Loops for You</h3><ul>${matched.map(l => `<li>${l.title} - ${l.time}</li>`).join('')}</ul>`;
-          document.body.appendChild(results);
+    function register() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          set(ref(db, 'users/' + user.uid), {
+            email: user.email
+          });
+          alert('Registration successful!');
+          document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
+        })
+        .catch((error) => {
+          alert(error.message);
         });
+    }
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
+          document.getElementById('auth').style.display = 'none';
+          document.getElementById('preferencesSection').style.display = 'block';
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    }
+
+    function logout() {
+      signOut(auth).then(() => {
+        document.getElementById('userWelcome').innerText = '';
+        document.getElementById('auth').style.display = 'block';
+        document.getElementById('preferencesSection').style.display = 'none';
+        document.getElementById('profileSection').style.display = 'none';
       });
     }
 
-    onAuthStateChanged(auth, user => {
+    function savePreferences() {
+      const activity = document.getElementById('activity').value;
+      const tripLength = document.getElementById('tripLength').value;
+      const vibe = document.getElementById('vibe').value;
+      const groupSize = document.getElementById('groupSize').value;
+      const budget = document.getElementById('budget').value;
+      const destinations = document.getElementById('destinations').value;
+
+      const user = auth.currentUser;
       if (user) {
-        document.getElementById("preferencesSection").style.display = "block";
-        document.getElementById("userWelcome").textContent = `Welcome, ${user.email}`;
-        displayMatches();
+        set(ref(db, 'preferences/' + user.uid), {
+          activity,
+          tripLength,
+          vibe,
+          groupSize,
+          budget,
+          destinations
+        });
+        alert('Preferences saved!');
+      }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('userWelcome').innerText = `Welcome, ${user.email}`;
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('preferencesSection').style.display = 'block';
+        document.getElementById('profileEmail').innerText = user.email;
+      } else {
+        document.getElementById('userWelcome').innerText = '';
       }
     });
-
-    window.showAuth = () => {
-      document.getElementById("auth").style.display = "block";
-    };
-
-    window.logout = () => {
-      signOut(auth);
-      alert("Logged out");
-      location.reload();
-    };
-
-    window.login = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password).catch(err => alert(err.message));
-    };
-
-    window.register = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password).catch(err => alert(err.message));
-    };
   </script>
 </body>
 </html>
