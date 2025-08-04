@@ -12,7 +12,8 @@ import {
   ref,
   set,
   push,
-  onValue
+  onValue,
+  update
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -29,7 +30,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 
-const showTab = (id) => {
+export function showTab(id) {
   document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
   document.getElementById(id).style.display = "block";
 
@@ -39,7 +40,7 @@ const showTab = (id) => {
   } else if (id === "userProfile") {
     loadUserProfile();
   }
-};
+}
 
 onAuthStateChanged(auth, user => {
   if (user) {
@@ -153,7 +154,7 @@ const joinLoop = (loopId) => {
     if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
     const updated = loop.participants || [];
     updated.push(auth.currentUser.uid);
-    set(loopRef + "/participants", updated);
+    update(ref(db, `loops/${loopId}`), { participants: updated });
   }, { onlyOnce: true });
 };
 
@@ -171,6 +172,12 @@ window.loadUserProfile = () => {
         const p = document.createElement("p");
         p.textContent = `${key}: ${Array.isArray(val) ? val.join(", ") : val}`;
         prefsDiv.appendChild(p);
+
+        // Update UI form values to reflect existing prefs
+        if (key === "climate") document.getElementById("prefClimate").value = val;
+        if (key === "pace") document.getElementById("prefPace").value = val;
+        if (key === "budget") document.getElementById("prefBudget").value = val;
+        if (key === "activities") document.getElementById("prefActivities").value = val.join(", ");
       });
     }
   });
