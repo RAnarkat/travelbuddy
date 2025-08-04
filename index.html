@@ -1,127 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LoopMeets</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f7faff;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #0077cc;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    #userHeader {
-      display: flex;
-      align-items: center;
-    }
-    #userHeader img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin-left: 10px;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: #dce6f9;
-      padding: 10px;
-    }
-    nav button {
-      margin: 0 10px;
-      padding: 10px 15px;
-      border: none;
-      background-color: #0077cc;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    nav button:hover {
-      background-color: #005fa3;
-    }
-    main {
-      padding: 20px;
-      max-width: 700px;
-      margin: auto;
-    }
-    h1, h2, h3 {
-      color: #0077cc;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #0077cc;
-      color: #fff;
-      font-weight: bold;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #authSection, #loopTab, #userProfile {
-      display: none;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    ul li {
-      background-color: #fff;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4faff; color: #333; }
+    header { background: #007bff; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    #userDisplay { display: none; align-items: center; gap: 10px; }
+    #userPhoto { border-radius: 50%; width: 40px; height: 40px; }
+    nav { display: none; justify-content: center; gap: 10px; padding: 10px; background: #e6f0ff; }
+    nav button { padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+    main > div { display: none; padding: 20px; }
+    input, select, button { display: block; margin: 10px 0; padding: 8px; width: 100%; max-width: 400px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <h1>LoopMeets</h1>
-      <p>Connect. Travel. Share. Discover your next adventure with like-minded explorers.</p>
-    </div>
-    <div id="userHeader" style="display: none;">
+    <h1>LoopMeets</h1>
+    <div id="userDisplay">
+      <img id="userPhoto" src="" alt="Profile" />
       <span id="userName"></span>
-      <img id="userPhoto" src="" alt="User Photo">
     </div>
   </header>
 
-  <nav id="navBar" style="display: none;">
-    <button id="loopsBtn">Loops</button>
-    <button id="profileBtn">My Profile</button>
+  <div id="authSection">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <nav id="navBar">
+    <button onclick="showTab('loopTab')">Loops</button>
+    <button onclick="showTab('userProfile')">My Profile</button>
     <button onclick="logout()">Logout</button>
   </nav>
 
   <main>
-    <div id="authSection">
-      <h2>Login or Sign Up</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
-      <button onclick="login()">Login</button>
-      <button onclick="signup()">Sign Up</button>
-    </div>
-
     <div id="loopTab">
       <h2>Create a Loop</h2>
-      <input type="text" id="loopTitle" placeholder="Loop Title">
-      <input type="text" id="loopLocation" placeholder="Location">
-      <input type="number" id="loopMax" placeholder="Max People">
-      <input type="text" id="loopTags" placeholder="Tags (comma separated)">
+      <input id="loopTitle" placeholder="Loop Title" />
+      <input id="loopLocation" placeholder="Location" />
+      <input id="loopMax" type="number" placeholder="Max Participants" />
+      <input id="loopTags" placeholder="Tags (comma-separated)" />
       <button onclick="createLoop()">Create Loop</button>
 
       <h3>Matched Loops</h3>
@@ -129,58 +54,36 @@
 
       <h3>My Loops</h3>
       <ul id="myLoops"></ul>
-
-      <button onclick="matchLoopsAI()">Find Matched Loops</button>
     </div>
 
     <div id="userProfile">
-      <h2>User Profile</h2>
-      <input type="text" id="username" placeholder="Username">
-      <input type="url" id="profilePhoto" placeholder="Profile Photo URL">
-      <button onclick="saveUserProfile()">Save Profile</button>
+      <h2>Profile Settings</h2>
+      <input id="username" placeholder="Username" />
+      <input id="photoUrl" placeholder="Profile Photo URL" />
+      <button onclick="saveProfileInfo()">Save Profile</button>
 
-      <h3>Edit Preferences</h3>
-      <label for="prefClimate">Preferred Climate:</label>
+      <h3>Preferences</h3>
       <select id="prefClimate">
+        <option value="">Preferred Climate</option>
         <option value="warm">Warm</option>
         <option value="cold">Cold</option>
-        <option value="moderate">Moderate</option>
       </select>
-
-      <label for="prefPace">Travel Pace:</label>
       <select id="prefPace">
+        <option value="">Travel Pace</option>
         <option value="relaxed">Relaxed</option>
-        <option value="balanced">Balanced</option>
-        <option value="fast">Fast-Paced</option>
+        <option value="fast">Fast</option>
       </select>
-
-      <label for="prefBudget">Budget:</label>
       <select id="prefBudget">
+        <option value="">Budget</option>
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>
       </select>
-
-      <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
+      <input id="prefActivities" placeholder="Preferred Activities (comma-separated)" />
       <button onclick="savePreferences()">Save Preferences</button>
-
-      <h3>Current Preferences</h3>
-      <div id="userPrefs"></div>
     </div>
   </main>
 
-  <script type="module">
-    import { showTab } from "./app.js";
-
-    const profileBtn = document.getElementById("profileBtn");
-    if (profileBtn) {
-      profileBtn.addEventListener("click", () => showTab("userProfile"));
-    }
-
-    const loopsBtn = document.getElementById("loopsBtn");
-    if (loopsBtn) {
-      loopsBtn.addEventListener("click", () => showTab("loopTab"));
-    }
-  </script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
