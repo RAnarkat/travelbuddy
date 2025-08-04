@@ -1,34 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LoopMeets</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #e0f7fa, #80deea);
+      background-color: #f0f8ff;
+      color: #333;
       margin: 0;
-      padding: 2rem;
+      padding: 20px;
     }
     h1 {
-      font-size: 2.5rem;
-      color: #006064;
+      color: #007BFF;
+      text-align: center;
     }
     input, select, button {
+      margin: 5px 0;
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
       display: block;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
     button {
-      background-color: #0097a7;
+      background-color: #007BFF;
       color: white;
       border: none;
       cursor: pointer;
     }
     button:hover {
-      background-color: #00796b;
+      background-color: #0056b3;
+    }
+    #matchedLoops li {
+      margin: 10px 0;
+    }
+    #authSection, #loopSection, #profileSection {
+      max-width: 500px;
+      margin: auto;
     }
   </style>
 </head>
@@ -36,19 +47,26 @@
   <h1>LoopMeets</h1>
 
   <div id="authSection">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
     <button onclick="signup()">Sign Up</button>
     <button onclick="logout()">Logout</button>
   </div>
 
+  <div id="profileSection" style="display:none">
+    <h2>Your Profile</h2>
+    <p id="userEmail"></p>
+    <h3>My Loops:</h3>
+    <ul id="myLoops"></ul>
+  </div>
+
   <div id="loopSection" style="display:none">
     <h2>Create a Loop</h2>
-    <input type="text" id="loopTitle" placeholder="Loop Title" />
-    <input type="text" id="loopLocation" placeholder="Location" />
-    <input type="number" id="loopMax" placeholder="Max People" />
-    <input type="text" id="loopTags" placeholder="Tags (comma separated)" />
+    <input type="text" id="loopTitle" placeholder="Loop Title">
+    <input type="text" id="loopLocation" placeholder="Location">
+    <input type="number" id="loopMax" placeholder="Max People">
+    <input type="text" id="loopTags" placeholder="Tags (comma separated)">
 
     <h3>Your Travel Preferences</h3>
     <label for="prefClimate">Preferred Climate:</label>
@@ -72,7 +90,7 @@
       <option value="high">High</option>
     </select>
 
-    <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)" />
+    <input type="text" id="prefActivities" placeholder="Activities you like (comma separated)">
 
     <button onclick="createLoop()">Create Loop</button>
     <button onclick="matchLoopsAI()">Find Matched Loops</button>
@@ -89,7 +107,8 @@
       set,
       get,
       onValue,
-      push
+      push,
+      child
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
     import {
       getAuth,
@@ -114,14 +133,29 @@
     const auth = getAuth(app);
 
     onAuthStateChanged(auth, user => {
+      document.getElementById('authSection').style.display = user ? 'none' : 'block';
+      document.getElementById('loopSection').style.display = user ? 'block' : 'none';
+      document.getElementById('profileSection').style.display = user ? 'block' : 'none';
       if (user) {
-        document.getElementById('authSection').style.display = 'none';
-        document.getElementById('loopSection').style.display = 'block';
-      } else {
-        document.getElementById('authSection').style.display = 'block';
-        document.getElementById('loopSection').style.display = 'none';
+        document.getElementById('userEmail').innerText = `Logged in as: ${user.email}`;
+        loadMyLoops(user.uid);
       }
     });
+
+    function loadMyLoops(uid) {
+      const myList = document.getElementById('myLoops');
+      myList.innerHTML = '';
+      get(ref(db, 'loops')).then(snapshot => {
+        snapshot.forEach(child => {
+          const loop = child.val();
+          if (loop.joined && loop.joined.includes(uid)) {
+            const li = document.createElement('li');
+            li.textContent = `${loop.title} – ${loop.location}`;
+            myList.appendChild(li);
+          }
+        });
+      });
+    }
 
     window.signup = function () {
       const email = document.getElementById('email').value;
@@ -140,10 +174,7 @@
     }
 
     window.logout = function () {
-      signOut(auth).then(() => {
-        document.getElementById('authSection').style.display = 'block';
-        document.getElementById('loopSection').style.display = 'none';
-      });
+      signOut(auth);
     }
 
     function expandWithSynonyms(keywords) {
@@ -217,6 +248,7 @@
           set(loopRef, joined);
           alert("You joined the loop!");
           matchLoopsAI();
+          loadMyLoops(user.uid);
         } else {
           alert("Already joined.");
         }
