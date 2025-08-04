@@ -70,6 +70,19 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-top: 2rem;
     }
+    .tag {
+      background-color: #f44336;
+      color: white;
+      padding: 0.2em 0.6em;
+      border-radius: 5px;
+      font-size: 0.8em;
+      margin-left: 1em;
+    }
+    .joined-users {
+      font-size: 0.9em;
+      margin-top: 0.3em;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -82,50 +95,34 @@
     <button class="btn-primary" onclick="showProfile()">My Profile</button>
   </header>
 
-  <section>
-    <div id="auth" style="display:none;">
-      <input id="email" placeholder="Email">
-      <input id="password" type="password" placeholder="Password">
-      <button onclick="login()">Login</button>
-      <button onclick="register()">Register</button>
-    </div>
+  <section class="profile-card" id="authSection">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
   </section>
 
-  <section class="profile-card" id="preferencesSection" style="display:none;">
-    <h2>Tell us about your travel preferences</h2>
-    <select id="activity">
-      <option value="beach">Beach</option>
-      <option value="hiking">Hiking</option>
-      <option value="nightlife">Nightlife</option>
-      <option value="culture">Culture</option>
-    </select>
-    <input id="tripLength" placeholder="Ideal trip length (days)">
-    <select id="vibe">
-      <option value="relaxing">Relaxing</option>
-      <option value="adventurous">Adventurous</option>
-      <option value="structured">Structured</option>
-      <option value="spontaneous">Spontaneous</option>
-    </select>
-    <input id="groupSize" placeholder="Preferred group size">
-    <input id="budget" placeholder="Budget range ($)">
-    <textarea id="destinations" placeholder="Top destinations or bucket list places"></textarea>
-    <button onclick="savePreferences()">Save Preferences</button>
+  <section class="profile-card" id="createLoopSection" style="display:none;">
+    <h2>Create a New Loop</h2>
+    <input type="text" id="loopTitle" placeholder="Title">
+    <input type="text" id="loopLocation" placeholder="Location">
+    <input type="number" id="loopMax" placeholder="Max People">
+    <input type="text" id="loopTags" placeholder="Comma-separated tags (e.g. beach, hiking, food)">
+    <input type="text" id="userPrefs" placeholder="Your trip interests (comma-separated)">
+    <button onclick="createLoop()">Create Loop</button>
+    <button onclick="matchLoopsAI()">Match Me With Loops</button>
   </section>
 
-  <section class="profile-card" id="profileSection" style="display:none;">
-    <h2>My Profile</h2>
-    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
-    <p><strong>My Loops Joined:</strong></p>
-    <ul id="joinedLoops"></ul>
+  <section class="profile-card" id="loopsDisplaySection" style="display:none;">
+    <h2>All Loops</h2>
+    <ul id="joinableLoops"></ul>
   </section>
 
-  <footer>
-    &copy; 2025 LoopMeets.ai — Make friends, not just memories.
-  </footer>
+  <ul id="matchedLoops" style="padding: 2rem; max-width: 900px; margin: auto; list-style: none;"></ul>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+    import { getDatabase, ref, set, push, onValue, update, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
 
     const firebaseConfig = {
@@ -143,71 +140,127 @@
     const auth = getAuth(app);
 
     function showAuth() {
-      document.getElementById("auth").style.display = "block";
-    }
-
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(userCredential => alert("Logged in!"))
-        .catch(error => alert(error.message));
-    }
-
-    function register() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => alert("Registered!"))
-        .catch(error => alert(error.message));
-    }
-
-    function logout() {
-      signOut(auth).then(() => alert("Logged out!"));
+      document.getElementById('authSection').style.display = 'block';
+      document.getElementById('createLoopSection').style.display = 'none';
+      document.getElementById('loopsDisplaySection').style.display = 'none';
     }
 
     function showProfile() {
-      const user = auth.currentUser;
-      if (user) {
-        document.getElementById("profileSection").style.display = "block";
-        document.getElementById("profileEmail").textContent = user.email;
-      }
+      document.getElementById('authSection').style.display = 'none';
+      document.getElementById('createLoopSection').style.display = 'block';
+      document.getElementById('loopsDisplaySection').style.display = 'block';
     }
 
-    function savePreferences() {
-      const user = auth.currentUser;
-      if (!user) return;
-      const preferences = {
-        activity: document.getElementById("activity").value,
-        tripLength: document.getElementById("tripLength").value,
-        vibe: document.getElementById("vibe").value,
-        groupSize: document.getElementById("groupSize").value,
-        budget: document.getElementById("budget").value,
-        destinations: document.getElementById("destinations").value
-      };
-      set(ref(db, 'preferences/' + user.uid), preferences)
-        .then(() => alert("Preferences saved!"))
-        .catch(error => alert(error.message));
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => location.reload())
+        .catch(err => alert(err.message));
+    }
+
+    function register() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => location.reload())
+        .catch(err => alert(err.message));
+    }
+
+    function logout() {
+      signOut(auth).then(() => {
+        document.getElementById('userWelcome').textContent = '';
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('createLoopSection').style.display = 'none';
+        document.getElementById('loopsDisplaySection').style.display = 'none';
+        document.getElementById('matchedLoops').innerHTML = '';
+      });
     }
 
     onAuthStateChanged(auth, user => {
       if (user) {
-        document.getElementById("userWelcome").textContent = `Welcome, ${user.email}`;
-        document.getElementById("preferencesSection").style.display = "block";
+        document.getElementById('userWelcome').textContent = `Welcome, ${user.email}`;
         showProfile();
+        displayLoops();
       } else {
-        document.getElementById("userWelcome").textContent = "";
-        document.getElementById("preferencesSection").style.display = "none";
-        document.getElementById("profileSection").style.display = "none";
+        showAuth();
       }
     });
+
+    function createLoop() {
+      const title = document.getElementById("loopTitle").value;
+      const location = document.getElementById("loopLocation").value;
+      const max = parseInt(document.getElementById("loopMax").value);
+      const tags = document.getElementById("loopTags").value.split(',').map(t => t.trim().toLowerCase());
+      const loop = {
+        title, location, max, tags,
+        participants: [],
+        creator: auth.currentUser.email
+      };
+      push(ref(db, 'loops/'), loop);
+    }
+
+    function displayLoops() {
+      const list = document.getElementById("joinableLoops");
+      onValue(ref(db, 'loops/'), snapshot => {
+        list.innerHTML = '';
+        snapshot.forEach(child => {
+          const data = child.val();
+          const li = document.createElement("li");
+          let booked = data.participants.length >= data.max;
+          let alreadyJoined = data.participants.includes(auth.currentUser.email);
+          li.innerHTML = `${data.title} – ${data.location} (${data.participants.length}/${data.max})`
+            + (booked ? '<span class="tag">All Booked</span>' : alreadyJoined ? '<span class="tag">Already Joined</span>' : `<button onclick="joinLoop('${child.key}')">Join</button>`)
+            + `<div class="joined-users">${data.participants.join(', ')}</div>`;
+          list.appendChild(li);
+        });
+      });
+    }
+
+    function joinLoop(loopId) {
+      const loopRef = ref(db, `loops/${loopId}`);
+      get(loopRef).then(snapshot => {
+        const loop = snapshot.val();
+        if (!loop.participants.includes(auth.currentUser.email) && loop.participants.length < loop.max) {
+          loop.participants.push(auth.currentUser.email);
+          update(loopRef, { participants: loop.participants });
+        }
+      });
+    }
+
+    function cosineSimilarity(a, b) {
+      const intersection = a.filter(tag => b.includes(tag));
+      return intersection.length / Math.sqrt(a.length * b.length);
+    }
+
+    function matchLoopsAI() {
+      const prefs = document.getElementById("userPrefs").value.split(',').map(t => t.trim().toLowerCase());
+      const matchedList = document.getElementById("matchedLoops");
+      const loopsRef = ref(db, 'loops/');
+
+      get(loopsRef).then(snapshot => {
+        matchedList.innerHTML = '';
+        snapshot.forEach(child => {
+          const loop = child.val();
+          const tags = loop.tags || [];
+          const similarity = cosineSimilarity(tags, prefs);
+          if (similarity > 0) {
+            const li = document.createElement("li");
+            li.textContent = `${loop.title} – ${loop.location} [Score: ${similarity.toFixed(2)}]`;
+            matchedList.appendChild(li);
+          }
+        });
+      });
+    }
 
     window.login = login;
     window.register = register;
     window.logout = logout;
     window.showAuth = showAuth;
     window.showProfile = showProfile;
-    window.savePreferences = savePreferences;
+    window.createLoop = createLoop;
+    window.joinLoop = joinLoop;
+    window.matchLoopsAI = matchLoopsAI;
   </script>
 </body>
 </html>
