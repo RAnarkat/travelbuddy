@@ -62,20 +62,6 @@ window.login = () => {
   signInWithEmailAndPassword(auth, email, password).catch(alert);
 };
 
-window.signup = () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  createUserWithEmailAndPassword(auth, email, password).then(cred => {
-    const userRef = ref(db, `users/${cred.user.uid}`);
-    set(userRef, {
-      email,
-      joined: new Date().toISOString(),
-      username: "",
-      photoUrl: ""
-    });
-  }).catch(alert);
-};
-
 window.logout = () => {
   signOut(auth);
 };
@@ -174,6 +160,8 @@ window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
+    if (!user) return;
+
     document.getElementById("username").value = user.username || "";
     document.getElementById("photoUrl").value = user.photoUrl || "";
 
@@ -187,14 +175,12 @@ window.loadUserProfile = () => {
       userName.textContent = user.username || "My Profile";
     }
 
-    const prefsDiv = document.getElementById("userPrefs");
-    prefsDiv.innerHTML = "";
+    // Pre-fill preference form
     if (user.preferences) {
-      Object.entries(user.preferences).forEach(([key, val]) => {
-        const p = document.createElement("p");
-        p.textContent = `${key}: ${Array.isArray(val) ? val.join(", ") : val}`;
-        prefsDiv.appendChild(p);
-      });
+      document.getElementById("prefClimate").value = user.preferences.climate || "";
+      document.getElementById("prefPace").value = user.preferences.pace || "";
+      document.getElementById("prefBudget").value = user.preferences.budget || "";
+      document.getElementById("prefActivities").value = (user.preferences.activities || []).join(", ");
     }
   });
 };
