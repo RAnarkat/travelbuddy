@@ -130,18 +130,22 @@ window.saveUserProfile = () => {
     const photoRef = sRef(storage, `profiles/${uid}`);
     uploadBytes(photoRef, file).then(() => {
       getDownloadURL(photoRef).then(url => {
-        update(userRef, { username, photoURL: url }).then(() => alert("Profile saved!"));
-        document.getElementById("userPhoto").src = url;
-        document.getElementById("headerPhoto").src = url;
-        document.getElementById("headerUsername").textContent = username;
+        update(userRef, { username, photoURL: url }).then(() => {
+          alert("Profile saved!");
+          // Update DOM
+          document.getElementById("userPhoto").src = url;
+          document.getElementById("headerPhoto").src = url;
+          document.getElementById("headerUsername").textContent = username;
+        });
       });
     });
   } else {
-    update(userRef, { username }).then(() => alert("Profile saved!"));
-    document.getElementById("headerUsername").textContent = username;
+    update(userRef, { username }).then(() => {
+      alert("Profile saved!");
+      document.getElementById("headerUsername").textContent = username;
+    });
   }
 };
-
 function loadUserDisplay() {
   const uid = auth.currentUser.uid;
   const userRef = ref(db, `users/${uid}`);
