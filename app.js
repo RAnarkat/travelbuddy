@@ -17,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 import {
   getStorage,
-  ref as sRef,
+  ref as storageRef,
   uploadBytes,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
@@ -38,15 +38,8 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 
 const showTab = (id) => {
-  document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
-  document.getElementById(id).style.display = "block";
-
-  if (id === "loopTab") {
-    loadMyLoops();
-    matchLoopsAI();
-  } else if (id === "profileTab") {
-    loadUserProfile();
-  }
+  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
+  document.getElementById(id).classList.add("visible");
 };
 
 onAuthStateChanged(auth, user => {
@@ -54,6 +47,10 @@ onAuthStateChanged(auth, user => {
     document.getElementById("authSection").style.display = "none";
     document.getElementById("navBar").style.display = "flex";
     showTab("loopTab");
+    loadLoops();
+    loadMyLoops();
+    matchLoopsAI();
+    loadUserProfile();
   } else {
     document.getElementById("authSection").style.display = "block";
     document.getElementById("navBar").style.display = "none";
@@ -98,21 +95,35 @@ window.savePreferences = () => {
 window.saveUserProfile = () => {
   const uid = auth.currentUser.uid;
   const username = document.getElementById("username").value;
-  const file = document.getElementById("profilePhoto").files[0];
-  const updates = { username };
-
-  if (file) {
-    const photoRef = sRef(storage, `profiles/${uid}/photo.jpg`);
-    uploadBytes(photoRef, file).then(() => {
-      return getDownloadURL(photoRef);
-    }).then(url => {
-      updates.photoURL = url;
-      update(ref(db, `users/${uid}`), updates);
-      document.getElementById("userPhoto").src = url;
+  const photo = document.getElementById("profilePhoto").files[0];
+  if (photo) {
+    const photoRef = storageRef(storage, `profiles/${uid}`);
+    uploadBytes(photoRef, photo).then(() => {
+      getDownloadURL(photoRef).then(url => {
+        update(ref(db, `users/${uid}`), { username, photoURL: url });
+        document.getElementById("userPhoto").src = url;
+      });
     });
   } else {
-    update(ref(db, `users/${uid}`), updates);
+    update(ref(db, `users/${uid}`), { username });
   }
+};
+
+window.loadUserProfile = () => {
+  const uid = auth.currentUser.uid;
+  onValue(ref(db, `users/${uid}`), snap => {
+    const user = snap.val();
+    if (user) {
+      document.getElementById("username").value = user.username || "";
+      document.getElementById("userPhoto").src = user.photoURL || "";
+      if (user.preferences) {
+        document.getElementById("prefClimate").value = user.preferences.climate || "";
+        document.getElementById("prefPace").value = user.preferences.pace || "";
+        document.getElementById("prefBudget").value = user.preferences.budget || "";
+        document.getElementById("prefActivities").value = user.preferences.activities?.join(", ") || "";
+      }
+    }
+  });
 };
 
 window.createLoop = () => {
@@ -125,6 +136,20 @@ window.createLoop = () => {
     participants: [uid]
   };
   push(ref(db, "loops"), loop);
+};
+
+window.loadLoops = () => {
+  const list = document.getElementById("allLoops");
+  list.innerHTML = "";
+  onValue(ref(db, "loops"), snapshot => {
+    list.innerHTML = "";
+    snapshot.forEach(child => {
+      const loop = child.val();
+      const li = document.createElement("li");
+      li.textContent = `${loop.title} (${loop.location})`;
+      list.appendChild(li);
+    });
+  });
 };
 
 window.loadMyLoops = () => {
@@ -149,16 +174,13 @@ window.matchLoopsAI = () => {
   onValue(ref(db, `users/${uid}/preferences`), snapshot => {
     const prefs = snapshot.val();
     if (!prefs) return;
-
     const list = document.getElementById("matchedLoops");
     list.innerHTML = "";
-
     onValue(ref(db, "loops"), snap => {
       list.innerHTML = "";
       snap.forEach(child => {
         const loop = child.val();
         if ((loop.participants?.length || 0) >= loop.max) return;
-
         const common = loop.tags.filter(tag => prefs.activities.includes(tag));
         if (common.length > 0) {
           const li = document.createElement("li");
@@ -183,25 +205,4 @@ const joinLoop = (loopId) => {
     updated.push(auth.currentUser.uid);
     set(ref(db, `loops/${loopId}/participants`), updated);
   }, { onlyOnce: true });
-};
-
-window.loadUserProfile = () => {
-  const uid = auth.currentUser.uid;
-  onValue(ref(db, `users/${uid}`), snap => {
-    const user = snap.val();
-    document.getElementById("username").value = user.username || "";
-    if (user.photoURL) {
-      document.getElementById("userPhoto").src = user.photoURL;
-    }
-
-    const prefsDiv = document.getElementById("userPrefs");
-    prefsDiv.innerHTML = "";
-    if (user.preferences) {
-      Object.entries(user.preferences).forEach(([key, val]) => {
-        const p = document.createElement("p");
-        p.textContent = `${key}: ${Array.isArray(val) ? val.join(", ") : val}`;
-        prefsDiv.appendChild(p);
-      });
-    }
-  });
 };
