@@ -37,9 +37,11 @@ const auth = getAuth();
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-const showTab = (id) => {
+// Make showTab available globally
+window.showTab = (id) => {
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
   document.getElementById(id).classList.add("visible");
+
   if (id === "matchedTab") matchLoopsAI();
   if (id === "myLoopsTab") loadMyLoops();
   if (id === "loopTab") loadAllLoops();
