@@ -5,8 +5,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
-  updateProfile
+  signOut
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import {
   getDatabase,
@@ -16,6 +15,12 @@ import {
   onValue,
   update
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+import {
+  getStorage,
+  ref as sRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
@@ -30,27 +35,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
+const storage = getStorage(app);
 
 const showTab = (id) => {
-  document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
-  document.getElementById(id).classList.add("visible");
+  document.querySelectorAll("main > div").forEach(div => div.style.display = "none");
+  document.getElementById(id).style.display = "block";
+
   if (id === "loopTab") {
     loadMyLoops();
     matchLoopsAI();
-  }
-  if (id === "profileTab") {
+  } else if (id === "profileTab") {
     loadUserProfile();
   }
 };
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    document.getElementById("authSection").classList.remove("visible");
-    document.querySelector("nav").style.display = "flex";
+    document.getElementById("authSection").style.display = "none";
+    document.getElementById("navBar").style.display = "flex";
     showTab("loopTab");
   } else {
-    document.getElementById("authSection").classList.add("visible");
-    document.querySelector("nav").style.display = "none";
+    document.getElementById("authSection").style.display = "block";
+    document.getElementById("navBar").style.display = "none";
+    showTab("authSection");
   }
 });
 
@@ -63,15 +70,13 @@ window.login = () => {
 window.signup = () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => {
-      const userRef = ref(db, `users/${cred.user.uid}`);
-      set(userRef, {
-        email,
-        joined: new Date().toISOString()
-      });
-    })
-    .catch(alert);
+  createUserWithEmailAndPassword(auth, email, password).then(cred => {
+    const userRef = ref(db, `users/${cred.user.uid}`);
+    set(userRef, {
+      email,
+      joined: new Date().toISOString()
+    });
+  }).catch(alert);
 };
 
 window.logout = () => {
@@ -80,33 +85,33 @@ window.logout = () => {
 
 window.savePreferences = () => {
   const uid = auth.currentUser.uid;
+  const prefRef = ref(db, `users/${uid}/preferences`);
   const preferences = {
     climate: document.getElementById("prefClimate").value,
     pace: document.getElementById("prefPace").value,
     budget: document.getElementById("prefBudget").value,
     activities: document.getElementById("prefActivities").value.split(",").map(s => s.trim().toLowerCase())
   };
-  update(ref(db, `users/${uid}`), { preferences });
+  set(prefRef, preferences);
 };
 
 window.saveUserProfile = () => {
   const uid = auth.currentUser.uid;
   const username = document.getElementById("username").value;
   const file = document.getElementById("profilePhoto").files[0];
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    const photoURL = reader.result;
-    update(ref(db, `users/${uid}`), {
-      username,
-      photoURL
-    });
-  };
+  const updates = { username };
 
   if (file) {
-    reader.readAsDataURL(file);
+    const photoRef = sRef(storage, `profiles/${uid}/photo.jpg`);
+    uploadBytes(photoRef, file).then(() => {
+      return getDownloadURL(photoRef);
+    }).then(url => {
+      updates.photoURL = url;
+      update(ref(db, `users/${uid}`), updates);
+      document.getElementById("userPhoto").src = url;
+    });
   } else {
-    update(ref(db, `users/${uid}`), { username });
+    update(ref(db, `users/${uid}`), updates);
   }
 };
 
@@ -124,16 +129,16 @@ window.createLoop = () => {
 
 window.loadMyLoops = () => {
   const uid = auth.currentUser.uid;
-  const list = document.getElementById("myLoops");
-  list.innerHTML = "";
+  const myList = document.getElementById("myLoops");
+  myList.innerHTML = "";
   onValue(ref(db, "loops"), snapshot => {
-    list.innerHTML = "";
+    myList.innerHTML = "";
     snapshot.forEach(child => {
       const loop = child.val();
       if (loop.participants?.includes(uid)) {
         const li = document.createElement("li");
         li.textContent = `${loop.title} (${loop.location})`;
-        list.appendChild(li);
+        myList.appendChild(li);
       }
     });
   });
@@ -141,21 +146,21 @@ window.loadMyLoops = () => {
 
 window.matchLoopsAI = () => {
   const uid = auth.currentUser.uid;
-  onValue(ref(db, `users/${uid}/preferences`), snap => {
-    const prefs = snap.val();
+  onValue(ref(db, `users/${uid}/preferences`), snapshot => {
+    const prefs = snapshot.val();
     if (!prefs) return;
 
     const list = document.getElementById("matchedLoops");
     list.innerHTML = "";
 
-    onValue(ref(db, "loops"), snapshot => {
+    onValue(ref(db, "loops"), snap => {
       list.innerHTML = "";
-      snapshot.forEach(child => {
+      snap.forEach(child => {
         const loop = child.val();
         if ((loop.participants?.length || 0) >= loop.max) return;
 
-        const match = loop.tags.some(tag => prefs.activities.includes(tag));
-        if (match) {
+        const common = loop.tags.filter(tag => prefs.activities.includes(tag));
+        if (common.length > 0) {
           const li = document.createElement("li");
           li.textContent = `${loop.title} - ${loop.location}`;
           const btn = document.createElement("button");
@@ -176,7 +181,7 @@ const joinLoop = (loopId) => {
     if (!loop || loop.participants?.includes(auth.currentUser.uid)) return;
     const updated = loop.participants || [];
     updated.push(auth.currentUser.uid);
-    update(loopRef, { participants: updated });
+    set(ref(db, `loops/${loopId}/participants`), updated);
   }, { onlyOnce: true });
 };
 
@@ -184,12 +189,9 @@ window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}`), snap => {
     const user = snap.val();
-    if (!user) return;
-
     document.getElementById("username").value = user.username || "";
     if (user.photoURL) {
-      const img = document.getElementById("userPhoto");
-      if (img) img.src = user.photoURL;
+      document.getElementById("userPhoto").src = user.photoURL;
     }
 
     const prefsDiv = document.getElementById("userPrefs");
