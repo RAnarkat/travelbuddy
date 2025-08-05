@@ -120,6 +120,7 @@ window.savePreferences = () => {
   };
   set(prefRef, preferences).then(() => alert("Preferences saved!"));
 };
+
 window.saveUserProfile = () => {
   const uid = auth.currentUser.uid;
   const username = document.getElementById("username").value;
@@ -128,17 +129,20 @@ window.saveUserProfile = () => {
 
   if (file) {
     const photoRef = sRef(storage, `profiles/${uid}`);
-    uploadBytes(photoRef, file).then(() => {
-      getDownloadURL(photoRef).then(url => {
+    uploadBytes(photoRef, file)
+      .then(() => getDownloadURL(photoRef))
+      .then(url => {
         update(userRef, { username, photoURL: url }).then(() => {
           alert("Profile saved!");
-          // Update DOM
           document.getElementById("userPhoto").src = url;
-          document.getElementById("headerPhoto").src = url;
+          document.getElementById("headerPhoto").src = url + `?t=${new Date().getTime()}`;
           document.getElementById("headerUsername").textContent = username;
         });
+      })
+      .catch(err => {
+        console.error("Error uploading photo:", err);
+        alert("Photo upload failed.");
       });
-    });
   } else {
     update(userRef, { username }).then(() => {
       alert("Profile saved!");
@@ -146,14 +150,22 @@ window.saveUserProfile = () => {
     });
   }
 };
+
 function loadUserDisplay() {
   const uid = auth.currentUser.uid;
   const userRef = ref(db, `users/${uid}`);
   onValue(userRef, snap => {
     const data = snap.val();
-    document.getElementById("headerUsername").textContent = data.username || "";
-    if (data.photoURL) document.getElementById("headerPhoto").src = data.photoURL;
-  });
+    if (data) {
+      if (data.username) {
+        document.getElementById("headerUsername").textContent = data.username;
+      }
+      if (data.photoURL) {
+        const img = document.getElementById("headerPhoto");
+        img.src = data.photoURL + `?t=${new Date().getTime()}`;
+      }
+    }
+  }, { onlyOnce: true });
 }
 
 window.createLoop = () => {
