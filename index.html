@@ -4,89 +4,85 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LoopMates</title>
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f6f9;
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f4f4;
       color: #333;
     }
     header {
-      background-color: #1e3a8a;
-      color: white;
-      padding: 20px;
+      background-color: #e0e0e0;
+      padding: 1rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     header h1 {
       margin: 0;
-      font-size: 2.5em;
+      font-size: 2rem;
+      color: #111;
     }
     header p {
-      margin: 5px 0 15px;
+      margin: 0.3rem 0 1rem;
+      font-size: 1rem;
+      color: #555;
     }
     nav {
       display: flex;
-      justify-content: center;
+      gap: 1rem;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
+      justify-content: center;
     }
     nav button {
-      background-color: #ffffff;
-      color: #1e3a8a;
-      border: 1px solid #1e3a8a;
-      padding: 10px 20px;
+      background-color: #d0d0d0;
+      border: none;
+      padding: 0.5rem 1.2rem;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s;
+      font-weight: 600;
     }
     nav button:hover {
-      background-color: #1e3a8a;
-      color: white;
+      background-color: #bdbdbd;
     }
     main {
-      display: flex;
-      justify-content: center;
-      padding: 30px 20px;
+      padding: 2rem;
+      max-width: 700px;
+      margin: 0 auto;
     }
-    .tab {
+    section {
       display: none;
-      background-color: white;
-      padding: 30px;
+      background: white;
       border-radius: 12px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-      max-width: 600px;
-      width: 100%;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
-    .tab.active {
+    section.active {
       display: block;
+    }
+    h2, h3 {
+      color: #222;
     }
     input, select, button {
       width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 0.6rem;
+      margin: 0.5rem 0;
       border: 1px solid #ccc;
-      font-size: 1em;
+      border-radius: 8px;
+      font-size: 1rem;
     }
     button {
-      background-color: #1e3a8a;
-      color: white;
-      border: none;
-      font-weight: bold;
-      transition: background-color 0.3s;
+      background-color: #bbb;
+      font-weight: 600;
     }
     button:hover {
-      background-color: #0f1e4d;
+      background-color: #999;
     }
-    h2, h3 {
-      color: #1e3a8a;
-    }
-    #headerPhoto {
-      vertical-align: middle;
-      margin-right: 10px;
+    img {
       border-radius: 50%;
     }
   </style>
@@ -109,7 +105,7 @@
   </header>
 
   <main>
-    <section id="authTabs" class="tab active">
+    <section id="authTabs" class="active">
       <h2>Login</h2>
       <input type="email" id="loginEmail" placeholder="Email">
       <input type="password" id="loginPassword" placeholder="Password">
@@ -121,55 +117,60 @@
       <button onclick="register()">Register</button>
     </section>
 
-    <section id="mainTabs">
-      <section id="allLoopsTab" class="tab">
-        <h2>All Loops</h2>
-        <div id="allLoops"></div>
-      </section>
+    <section id="allLoopsTab">
+      <h2>All Loops</h2>
+      <div id="allLoops"></div>
+    </section>
 
-      <section id="matchedTab" class="tab">
-        <h2>Matched Loops</h2>
-        <p>(Coming soon...)</p>
-      </section>
+    <section id="matchedTab">
+      <h2>Matched Loops</h2>
+      <p>(Coming soon...)</p>
+    </section>
 
-      <section id="myLoopsTab" class="tab">
-        <h2>My Loops</h2>
-        <button onclick="createLoop()">Create Loop</button>
-        <div id="myLoops"></div>
-      </section>
+    <section id="myLoopsTab">
+      <h2>My Loops</h2>
+      <button onclick="createLoop()">Create Loop</button>
+      <div id="myLoops"></div>
+    </section>
 
-      <section id="myProfileTab" class="tab">
-        <h2>My Profile</h2>
-        <img id="userPhoto" src="" alt="Profile Photo" width="100" height="100">
-        <input type="file" id="profilePhoto">
-        <input type="text" id="username" placeholder="Username">
-        <button onclick="saveUserProfile()">Save Profile</button>
+    <section id="myProfileTab">
+      <h2>My Profile</h2>
+      <img id="userPhoto" src="" alt="Profile Photo" width="100" height="100">
+      <input type="file" id="profilePhoto">
+      <input type="text" id="username" placeholder="Username">
+      <button onclick="saveUserProfile()">Save Profile</button>
 
-        <h3>Edit Preferences</h3>
-        <select id="climate">
-          <option value="">Select Climate</option>
-          <option value="cold">Cold</option>
-          <option value="warm">Warm</option>
-          <option value="temperate">Temperate</option>
-        </select>
-        <select id="pace">
-          <option value="">Select Pace</option>
-          <option value="relaxed">Relaxed</option>
-          <option value="moderate">Moderate</option>
-          <option value="adventurous">Adventurous</option>
-        </select>
-        <select id="budget">
-          <option value="">Select Budget</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-        <input type="text" id="activities" placeholder="Activities (comma separated)">
-        <button onclick="savePreferences()">Save Preferences</button>
-      </section>
+      <h3>Edit Preferences</h3>
+      <select id="climate">
+        <option value="">Select Climate</option>
+        <option value="cold">Cold</option>
+        <option value="warm">Warm</option>
+        <option value="temperate">Temperate</option>
+      </select>
+      <select id="pace">
+        <option value="">Select Pace</option>
+        <option value="relaxed">Relaxed</option>
+        <option value="moderate">Moderate</option>
+        <option value="adventurous">Adventurous</option>
+      </select>
+      <select id="budget">
+        <option value="">Select Budget</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <input type="text" id="activities" placeholder="Activities (comma separated)">
+      <button onclick="savePreferences()">Save Preferences</button>
     </section>
   </main>
 
   <script type="module" src="app.js"></script>
+  <script>
+    function showTab(tabId) {
+      const sections = document.querySelectorAll('main section');
+      sections.forEach(s => s.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+  </script>
 </body>
 </html>
