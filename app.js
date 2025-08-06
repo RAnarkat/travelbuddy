@@ -1,4 +1,4 @@
-// app.js
+// FULL app.js with all requested updates
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
   getAuth,
@@ -13,7 +13,8 @@ import {
   set,
   push,
   onValue,
-  update
+  update,
+  get
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 import {
   getStorage,
@@ -36,6 +37,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getDatabase(app);
 const storage = getStorage(app);
+
+// Utility: Get username from UID
+async function getUsername(uid) {
+  const snap = await get(ref(db, `users/${uid}/username`));
+  return snap.exists() ? snap.val() : "Unknown User";
+}
 
 window.showTab = (id) => {
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
@@ -75,19 +82,18 @@ window.logout = () => {
 window.completeRegistration = () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const username = document.getElementById("regUsername").value;
+  const file = document.getElementById("regPhoto").files[0];
+  const preferences = {
+    climate: document.getElementById("regClimate").value,
+    pace: document.getElementById("regPace").value,
+    budget: document.getElementById("regBudget").value,
+    activities: document.getElementById("regActivities").value.split(",").map(a => a.trim().toLowerCase())
+  };
 
   createUserWithEmailAndPassword(auth, email, password).then(cred => {
     const uid = cred.user.uid;
     const userRef = ref(db, `users/${uid}`);
-    const username = document.getElementById("regUsername").value;
-    const file = document.getElementById("regPhoto").files[0];
-    const preferences = {
-      climate: document.getElementById("regClimate").value,
-      pace: document.getElementById("regPace").value,
-      budget: document.getElementById("regBudget").value,
-      activities: document.getElementById("regActivities").value.split(",").map(a => a.trim().toLowerCase())
-    };
-
     const baseData = {
       email,
       username,
@@ -175,7 +181,8 @@ window.createLoop = () => {
     location: document.getElementById("loopLocation").value,
     max: parseInt(document.getElementById("loopMax").value),
     tags: document.getElementById("loopTags").value.split(",").map(t => t.trim().toLowerCase()),
-    participants: [uid]
+    participants: [uid],
+    creator: uid
   };
   push(ref(db, "loops"), loop);
 };
@@ -183,24 +190,35 @@ window.createLoop = () => {
 window.loadAllLoops = () => {
   const list = document.getElementById("allLoops");
   list.innerHTML = "";
-  onValue(ref(db, "loops"), snap => {
+  onValue(ref(db, "loops"), async snap => {
     list.innerHTML = "";
+    const promises = [];
     snap.forEach(child => {
       const loop = child.val();
-      const li = document.createElement("li");
-      li.textContent = `${loop.title} - ${loop.location}`;
-      if ((loop.participants?.length || 0) >= loop.max) {
-        li.textContent += " (All Booked)";
-      } else {
-        const btn = document.createElement("button");
-        btn.textContent = "Join";
-        btn.onclick = () => joinLoop(child.key);
-        li.appendChild(btn);
-      }
-      list.appendChild(li);
+      const key = child.key;
+      promises.push(renderLoopItem(loop, key));
     });
+    const items = await Promise.all(promises);
+    items.forEach(li => list.appendChild(li));
   });
 };
+
+async function renderLoopItem(loop, key) {
+  const li = document.createElement("li");
+  const creatorName = await getUsername(loop.creator);
+  const participantNames = await Promise.all((loop.participants || []).map(getUsername));
+  li.innerHTML = `<strong>${loop.title}</strong> - ${loop.location}<br>Created by: ${creatorName}<br>Participants: ${participantNames.join(", ")}`;
+
+  if ((loop.participants?.length || 0) >= loop.max) {
+    li.innerHTML += "<br><em>All Booked</em>";
+  } else if (!loop.participants.includes(auth.currentUser.uid)) {
+    const btn = document.createElement("button");
+    btn.textContent = "Join";
+    btn.onclick = () => joinLoop(key);
+    li.appendChild(btn);
+  }
+  return li;
+}
 
 const joinLoop = (loopId) => {
   const uid = auth.currentUser.uid;
@@ -230,6 +248,7 @@ window.loadMyLoops = () => {
     });
   });
 };
+
 window.loadUserProfile = () => {
   const uid = auth.currentUser.uid;
   const userRef = ref(db, `users/${uid}`);
@@ -246,47 +265,36 @@ window.loadUserProfile = () => {
   });
 };
 
-// Utility function to score how well a loop matches preferences
 function scoreMatch(loop, prefs) {
   let score = 0;
-
   if (loop.tags && prefs.activities) {
     const activityMatch = loop.tags.filter(tag => prefs.activities.includes(tag)).length;
-    score += activityMatch * 3; // Strong weight
+    score += activityMatch * 3;
   }
-
   if (prefs.climate && loop.tags?.includes(prefs.climate)) score += 2;
   if (prefs.pace && loop.tags?.includes(prefs.pace)) score += 2;
   if (prefs.budget && loop.tags?.includes(prefs.budget)) score += 1;
-
   return score;
 }
 
-// AI Matching based on scoring
 window.matchLoopsAI = () => {
   const uid = auth.currentUser.uid;
   onValue(ref(db, `users/${uid}/preferences`), snapshot => {
     const prefs = snapshot.val();
     if (!prefs) return;
-
     const list = document.getElementById("matchedLoops");
     list.innerHTML = "";
-
     onValue(ref(db, "loops"), snap => {
       const scoredLoops = [];
-
       snap.forEach(child => {
         const loop = child.val();
         if ((loop.participants?.length || 0) >= loop.max) return;
-
         const score = scoreMatch(loop, prefs);
         if (score > 0) {
           scoredLoops.push({ key: child.key, loop, score });
         }
       });
-
       scoredLoops.sort((a, b) => b.score - a.score);
-
       scoredLoops.forEach(({ key, loop, score }) => {
         const li = document.createElement("li");
         li.textContent = `${loop.title} - ${loop.location} (Score: ${score})`;
