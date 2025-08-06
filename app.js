@@ -1,4 +1,4 @@
-// FULL app.js with all previous functions + debug logs
+// FULL app.js with all core features + debug logs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import {
   getAuth,
@@ -38,7 +38,9 @@ const auth = getAuth();
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-console.log("Firebase App initialized");
+function log(...args) {
+  console.log("[LoopMates]", ...args);
+}
 
 window.showTab = (id) => {
   document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("visible"));
@@ -77,16 +79,6 @@ window.login = () => {
 window.logout = () => {
   signOut(auth);
 };
-
-async function getUsername(uid) {
-  try {
-    const snap = await get(ref(db, `users/${uid}/username`));
-    return snap.exists() ? snap.val() : "Unknown User";
-  } catch (err) {
-    console.error("Error getting username for", uid, err);
-    return "Unknown User";
-  }
-}
 
 window.completeRegistration = () => {
   const email = document.getElementById("email").value;
@@ -141,10 +133,12 @@ window.saveUserProfile = () => {
   const userRef = ref(db, `users/${uid}`);
 
   if (file) {
+    log("Uploading profile photo...");
     const photoRef = sRef(storage, `profiles/${uid}`);
     uploadBytes(photoRef, file)
       .then(() => getDownloadURL(photoRef))
       .then(url => {
+        log("Got download URL:", url);
         update(userRef, { username, photoURL: url }).then(() => {
           alert("Profile saved!");
           document.getElementById("userPhoto").src = url;
@@ -153,10 +147,11 @@ window.saveUserProfile = () => {
         });
       })
       .catch(err => {
-        console.error("Error uploading photo:", err);
-        alert("Photo upload failed.");
+        console.error("Photo upload failed:", err);
+        alert("Photo upload failed. See console.");
       });
   } else {
+    log("Saving profile without photo...");
     update(userRef, { username }).then(() => {
       alert("Profile saved!");
       document.getElementById("headerUsername").textContent = username;
@@ -169,6 +164,7 @@ function loadUserDisplay() {
   const userRef = ref(db, `users/${uid}`);
   onValue(userRef, snap => {
     const data = snap.val();
+    log("User data loaded:", data);
     if (data) {
       document.getElementById("headerUsername").textContent = data.username || "";
       if (data.photoURL) {
@@ -176,6 +172,16 @@ function loadUserDisplay() {
       }
     }
   }, { onlyOnce: true });
+}
+
+async function getUsername(uid) {
+  try {
+    const snap = await get(ref(db, `users/${uid}/username`));
+    return snap.exists() ? snap.val() : "Unknown User";
+  } catch (err) {
+    console.error("Error getting username for", uid, err);
+    return "Unknown User";
+  }
 }
 
 window.createLoop = () => {
@@ -222,3 +228,96 @@ async function renderLoopItem(loop, key) {
   }
   return li;
 }
+
+const joinLoop = (loopId) => {
+  const uid = auth.currentUser.uid;
+  const loopRef = ref(db, `loops/${loopId}`);
+  onValue(loopRef, snap => {
+    const loop = snap.val();
+    if (!loop || loop.participants?.includes(uid)) {
+      log("User already joined or loop missing.");
+      return;
+    }
+    const updated = loop.participants || [];
+    updated.push(uid);
+    set(ref(db, `loops/${loopId}/participants`), updated)
+      .then(() => log("User joined loop successfully.", loopId))
+      .catch(err => console.error("Failed to join loop:", err));
+  }, { onlyOnce: true });
+};
+
+window.loadMyLoops = () => {
+  const uid = auth.currentUser.uid;
+  const list = document.getElementById("myLoops");
+  list.innerHTML = "";
+  onValue(ref(db, "loops"), snap => {
+    list.innerHTML = "";
+    snap.forEach(child => {
+      const loop = child.val();
+      if (loop.participants?.includes(uid)) {
+        const li = document.createElement("li");
+        li.textContent = `${loop.title} - ${loop.location}`;
+        list.appendChild(li);
+      }
+    });
+  });
+};
+
+window.loadUserProfile = () => {
+  const uid = auth.currentUser.uid;
+  const userRef = ref(db, `users/${uid}`);
+  onValue(userRef, snap => {
+    const data = snap.val();
+    document.getElementById("username").value = data.username || "";
+    if (data.photoURL) document.getElementById("userPhoto").src = data.photoURL;
+    if (data.preferences) {
+      document.getElementById("prefClimate").value = data.preferences.climate || "";
+      document.getElementById("prefPace").value = data.preferences.pace || "";
+      document.getElementById("prefBudget").value = data.preferences.budget || "";
+      document.getElementById("prefActivities").value = data.preferences.activities?.join(", ") || "";
+    }
+  });
+};
+
+function scoreMatch(loop, prefs) {
+  let score = 0;
+  if (loop.tags && prefs.activities) {
+    const activityMatch = loop.tags.filter(tag => prefs.activities.includes(tag)).length;
+    score += activityMatch * 3;
+  }
+  if (prefs.climate && loop.tags?.includes(prefs.climate)) score += 2;
+  if (prefs.pace && loop.tags?.includes(prefs.pace)) score += 2;
+  if (prefs.budget && loop.tags?.includes(prefs.budget)) score += 1;
+  return score;
+}
+
+window.matchLoopsAI = () => {
+  const uid = auth.currentUser.uid;
+  onValue(ref(db, `users/${uid}/preferences`), snapshot => {
+    const prefs = snapshot.val();
+    if (!prefs) return;
+    const list = document.getElementById("matchedLoops");
+    list.innerHTML = "";
+    onValue(ref(db, "loops"), snap => {
+      const scoredLoops = [];
+      snap.forEach(child => {
+        const loop = child.val();
+        if ((loop.participants?.length || 0) >= loop.max) return;
+        const score = scoreMatch(loop, prefs);
+        if (score > 0) {
+          scoredLoops.push({ key: child.key, loop, score });
+        }
+      });
+      scoredLoops.sort((a, b) => b.score - a.score);
+      scoredLoops.forEach(({ key, loop, score }) => {
+        const li = document.createElement("li");
+        li.textContent = `${loop.title} - ${loop.location} (Score: ${score})`;
+        const btn = document.createElement("button");
+        btn.textContent = "Join";
+        btn.onclick = () => joinLoop(key);
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    });
+  });
+};
