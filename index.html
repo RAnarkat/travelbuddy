@@ -4,97 +4,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LoopMates</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      background-color: #f5faff;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
       color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
     header {
-      background-color: #0077cc;
+      background-color: #1e3a8a;
       color: white;
-      width: 100%;
-      padding: 1rem;
+      padding: 20px;
       text-align: center;
-      position: relative;
     }
-    header div {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
     }
-    header img {
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      object-fit: cover;
+    header p {
+      margin: 5px 0 15px;
     }
     nav {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 1rem;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
     }
     nav button {
-      padding: 0.5rem 1rem;
-      background-color: white;
-      color: #0077cc;
-      border: 2px solid #0077cc;
+      background-color: #ffffff;
+      color: #1e3a8a;
+      border: 1px solid #1e3a8a;
+      padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+      transition: background-color 0.3s;
     }
     nav button:hover {
-      background-color: #0077cc;
+      background-color: #1e3a8a;
       color: white;
     }
     main {
-      width: 90%;
-      max-width: 600px;
-      background: white;
-      margin-top: 2rem;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    h2, h3 {
-      margin-top: 0;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-    button {
-      background-color: #0077cc;
-      color: white;
-      font-weight: bold;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    img#userPhoto {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 1rem;
+      display: flex;
+      justify-content: center;
+      padding: 30px 20px;
     }
     .tab {
       display: none;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      max-width: 600px;
+      width: 100%;
     }
     .tab.active {
       display: block;
+    }
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    button {
+      background-color: #1e3a8a;
+      color: white;
+      border: none;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #0f1e4d;
+    }
+    h2, h3 {
+      color: #1e3a8a;
+    }
+    #headerPhoto {
+      vertical-align: middle;
+      margin-right: 10px;
+      border-radius: 50%;
     }
   </style>
 </head>
@@ -103,7 +96,7 @@
     <h1>LoopMeets</h1>
     <p>Connect. Travel. Belong.</p>
     <div>
-      <img id="headerPhoto" src="" alt="Profile">
+      <img id="headerPhoto" src="" alt="Profile" width="40" height="40">
       <span id="headerUsername"></span>
     </div>
     <nav>
@@ -128,26 +121,26 @@
       <button onclick="register()">Register</button>
     </section>
 
-    <section id="mainTabs" class="tab">
-      <section id="allLoopsTab">
+    <section id="mainTabs">
+      <section id="allLoopsTab" class="tab">
         <h2>All Loops</h2>
         <div id="allLoops"></div>
       </section>
 
-      <section id="matchedTab">
+      <section id="matchedTab" class="tab">
         <h2>Matched Loops</h2>
         <p>(Coming soon...)</p>
       </section>
 
-      <section id="myLoopsTab">
+      <section id="myLoopsTab" class="tab">
         <h2>My Loops</h2>
         <button onclick="createLoop()">Create Loop</button>
         <div id="myLoops"></div>
       </section>
 
-      <section id="myProfileTab">
+      <section id="myProfileTab" class="tab">
         <h2>My Profile</h2>
-        <img id="userPhoto" src="" alt="Profile Photo">
+        <img id="userPhoto" src="" alt="Profile Photo" width="100" height="100">
         <input type="file" id="profilePhoto">
         <input type="text" id="username" placeholder="Username">
         <button onclick="saveUserProfile()">Save Profile</button>
