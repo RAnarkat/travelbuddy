@@ -1,197 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LoopMeets</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background-color: #f5faff;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    header {
-      background-color: #0077cc;
-      color: white;
-      width: 100%;
-      padding: 1rem;
-      text-align: center;
-      position: relative;
-    }
-    #userDisplay {
-      position: absolute;
-      right: 1rem;
-      top: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    #userDisplay img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-    nav button {
-      padding: 0.5rem 1rem;
-      border: none;
-      background-color: #0077cc;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    nav button:hover {
-      background-color: #005fa3;
-    }
-    .tab {
-      display: none;
-      width: 90%;
-      max-width: 600px;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .visible {
-      display: block;
-    }
-    input, select {
-      width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button.action {
-      margin-top: 1rem;
-      width: 100%;
-      background-color: #0077cc;
-      color: white;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #eee;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoopMates</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <h1>LoopMeets</h1>
     <p>Connect. Travel. Belong.</p>
-    <div id="userDisplay" style="display: none">
-      <img id="headerPhoto" src="" alt="User Photo">
+    <div>
+      <img id="headerPhoto" src="" alt="Profile" width="40" height="40" style="border-radius: 50%;">
       <span id="headerUsername"></span>
     </div>
+    <nav>
+      <button onclick="showTab('allLoopsTab')">All Loops</button>
+      <button onclick="showTab('matchedTab')">Matched</button>
+      <button onclick="showTab('myLoopsTab')">My Loops</button>
+      <button onclick="showTab('myProfileTab')">My Profile</button>
+      <button onclick="logout()">Logout</button>
+    </nav>
   </header>
 
-  <div id="authSection" class="tab visible">
-    <h2>Login or Register</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button class="action" onclick="login()">Login</button>
-    <button class="action" onclick="showTab('registerStep')">Register</button>
-  </div>
+  <main>
+    <section id="authTabs" class="tab">
+      <h2>Login</h2>
+      <input type="email" id="loginEmail" placeholder="Email">
+      <input type="password" id="loginPassword" placeholder="Password">
+      <button onclick="login()">Login</button>
 
-  <div id="registerStep" class="tab">
-    <h2>Complete Registration</h2>
-    <input type="text" id="regUsername" placeholder="Username">
-    <input type="file" id="regPhoto">
-    <select id="regClimate">
-      <option value="">Select Climate</option>
-      <option value="tropical">Tropical</option>
-      <option value="cold">Cold</option>
-    </select>
-    <select id="regPace">
-      <option value="">Select Pace</option>
-      <option value="relaxed">Relaxed</option>
-      <option value="adventurous">Adventurous</option>
-    </select>
-    <select id="regBudget">
-      <option value="">Select Budget</option>
-      <option value="low">Low</option>
-      <option value="high">High</option>
-    </select>
-    <input type="text" id="regActivities" placeholder="Activities (comma separated)">
-    <button class="action" onclick="completeRegistration()">Continue</button>
-  </div>
+      <h2>Register</h2>
+      <input type="email" id="registerEmail" placeholder="Email">
+      <input type="password" id="registerPassword" placeholder="Password">
+      <button onclick="register()">Register</button>
+    </section>
 
-  <nav id="navBar" style="display: none">
-    <button onclick="showTab('loopTab')">All Loops</button>
-    <button onclick="showTab('matchedTab')">Matched</button>
-    <button onclick="showTab('myLoopsTab')">My Loops</button>
-    <button onclick="showTab('profileTab')">My Profile</button>
-    <button onclick="logout()">Logout</button>
-  </nav>
+    <section id="mainTabs" class="tab" style="display:none;">
+      <section id="allLoopsTab">
+        <h2>All Loops</h2>
+        <div id="allLoops"></div>
+      </section>
 
-  <div id="loopTab" class="tab">
-    <h2>All Loops</h2>
-    <ul id="allLoops"></ul>
-    <h3>Create a Loop</h3>
-    <input type="text" id="loopTitle" placeholder="Loop Title">
-    <input type="text" id="loopLocation" placeholder="Location">
-    <input type="number" id="loopMax" placeholder="Max Participants">
-    <input type="text" id="loopTags" placeholder="Tags (comma separated)">
-    <button class="action" onclick="createLoop()">Create Loop</button>
-  </div>
+      <section id="matchedTab">
+        <h2>Matched Loops</h2>
+        <p>(Coming soon...)</p>
+      </section>
 
-  <div id="matchedTab" class="tab">
-    <h2>Matched Loops</h2>
-    <ul id="matchedLoops"></ul>
-  </div>
+      <section id="myLoopsTab">
+        <h2>My Loops</h2>
+        <button onclick="createLoop()">Create Loop</button>
+        <div id="myLoops"></div>
+      </section>
 
-  <div id="myLoopsTab" class="tab">
-    <h2>My Loops</h2>
-    <ul id="myLoops"></ul>
-  </div>
+      <section id="myProfileTab">
+        <h2>My Profile</h2>
+        <img id="userPhoto" src="" alt="Profile Photo" width="100" height="100" style="border-radius: 50%;">
+        <input type="file" id="profilePhoto">
+        <input type="text" id="username" placeholder="Username">
+        <button onclick="saveUserProfile()">Save Profile</button>
 
-  <div id="profileTab" class="tab">
-    <h2>My Profile</h2>
-    <img id="userPhoto" src="" alt="Profile Photo" style="width:100px;height:100px;border-radius:50%;">
-    <input type="file" id="profilePhoto">
-    <input type="text" id="username" placeholder="Username">
-
-    <h3>Edit Preferences</h3>
-    <select id="prefClimate">
-      <option value="">Select Climate</option>
-      <option value="tropical">Tropical</option>
-      <option value="cold">Cold</option>
-    </select>
-    <select id="prefPace">
-      <option value="">Select Pace</option>
-      <option value="relaxed">Relaxed</option>
-      <option value="adventurous">Adventurous</option>
-    </select>
-    <select id="prefBudget">
-      <option value="">Select Budget</option>
-      <option value="low">Low</option>
-      <option value="high">High</option>
-    </select>
-    <input type="text" id="prefActivities" placeholder="Activities (comma separated)">
-    <button class="action" onclick="saveUserProfile()">Save Profile</button>
-    <button class="action" onclick="savePreferences()">Save Preferences</button>
-  </div>
+        <h3>Edit Preferences</h3>
+        <select id="climate">
+          <option value="">Select Climate</option>
+          <option value="cold">Cold</option>
+          <option value="warm">Warm</option>
+          <option value="temperate">Temperate</option>
+        </select>
+        <select id="pace">
+          <option value="">Select Pace</option>
+          <option value="relaxed">Relaxed</option>
+          <option value="moderate">Moderate</option>
+          <option value="adventurous">Adventurous</option>
+        </select>
+        <select id="budget">
+          <option value="">Select Budget</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <input type="text" id="activities" placeholder="Activities (comma separated)">
+        <button onclick="savePreferences()">Save Preferences</button>
+      </section>
+    </section>
+  </main>
 
   <script type="module" src="app.js"></script>
-  <script>
-    console.log('Loaded index.html');
-  </script>
 </body>
 </html>
