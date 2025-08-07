@@ -1,185 +1,185 @@
-// FULL app.js (All Features + Debug Logs)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  push,
-  onValue,
-  update,
-  get
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-import {
-  getStorage,
-  ref as sRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+// Firebase setup
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
+import { getDatabase, ref, set, push, onValue, get, update } from "firebase/database";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC_lEYUVD1yP3vdde0JstOz4f3YhEbVaBk",
   authDomain: "loopmates-94b46.firebaseapp.com",
   databaseURL: "https://loopmates-94b46-default-rtdb.firebaseio.com",
   projectId: "loopmates-94b46",
-  storageBucket: "loopmates-94b46.appspot.com",
+  storageBucket: "loopmates-94b46.firebasestorage.app",
   messagingSenderId: "336997321934",
   appId: "1:336997321934:web:3ffd0f1dbf6b3930e0149f"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getDatabase(app);
+const auth = getAuth(app);
+const database = getDatabase(app);
 const storage = getStorage(app);
 
-console.log("Firebase initialized");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const usernameInput = document.getElementById("username");
+const climateInput = document.getElementById("climate");
+const paceInput = document.getElementById("pace");
+const budgetInput = document.getElementById("budget");
+const activitiesInput = document.getElementById("activities");
+const profilePhotoInput = document.getElementById("profilePhoto");
+const userPhotoDisplay = document.getElementById("userPhoto");
+const headerPhoto = document.getElementById("headerPhoto");
+const headerUsername = document.getElementById("headerUsername");
 
-function showTab(tabName) {
-  const tabs = document.querySelectorAll(".tab");
-  tabs.forEach(tab => tab.style.display = "none");
-  document.getElementById(tabName).style.display = "block";
+function login() {
+  signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value)
+    .then(() => location.reload())
+    .catch(error => alert(error.message));
+}
+
+function register() {
+  createUserWithEmailAndPassword(auth, registerEmail.value, registerPassword.value)
+    .then(userCredential => {
+      const userId = userCredential.user.uid;
+      const userRef = ref(database, 'users/' + userId);
+      set(userRef, {
+        email: registerEmail.value,
+        joined: new Date().toISOString()
+      }).then(() => location.reload());
+    })
+    .catch(error => alert(error.message));
+}
+
+function logout() {
+  signOut(auth).then(() => location.reload());
+}
+
+function saveUserProfile() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = ref(database, 'users/' + user.uid);
+  const updates = { username: usernameInput.value };
+
+  if (profilePhotoInput.files.length > 0) {
+    const file = profilePhotoInput.files[0];
+    const photoRef = storageRef(storage, 'profilePhotos/' + user.uid);
+    uploadBytes(photoRef, file).then(() => {
+      getDownloadURL(photoRef).then(url => {
+        updates.photoURL = url;
+        update(userRef, updates);
+        userPhotoDisplay.src = url;
+        headerPhoto.src = url;
+      });
+    });
+  } else {
+    update(userRef, updates);
+  }
+}
+
+function savePreferences() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const preferencesRef = ref(database, 'users/' + user.uid + '/preferences');
+  const preferences = {
+    climate: climateInput.value,
+    pace: paceInput.value,
+    budget: budgetInput.value,
+    activities: activitiesInput.value.split(',').map(a => a.trim())
+  };
+  set(preferencesRef, preferences);
+}
+
+function createLoop() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const loopsRef = ref(database, 'loops');
+  const newLoopRef = push(loopsRef);
+  set(newLoopRef, {
+    creator: user.uid,
+    participants: [user.uid]
+  });
+}
+
+function displayAllLoops() {
+  const loopsRef = ref(database, 'loops');
+  const container = document.getElementById("allLoops");
+  container.innerHTML = '';
+
+  onValue(loopsRef, snapshot => {
+    container.innerHTML = '';
+    snapshot.forEach(child => {
+      const loop = child.val();
+      const loopDiv = document.createElement("div");
+      loopDiv.innerHTML = `
+        <p><strong>Loop</strong> by ${loop.creator}</p>
+        <p>Participants: ${loop.participants?.join(', ')}</p>
+        <button onclick="joinLoop('${child.key}')">Join</button>
+        <hr>
+      `;
+      container.appendChild(loopDiv);
+    });
+  });
+}
+
+function joinLoop(loopId) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const participantsRef = ref(database, 'loops/' + loopId + '/participants');
+  get(participantsRef).then(snapshot => {
+    const current = snapshot.val() || [];
+    if (!current.includes(user.uid)) {
+      current.push(user.uid);
+      set(participantsRef, current);
+    }
+  });
+}
+
+function displayMyLoops() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const container = document.getElementById("myLoops");
+  const loopsRef = ref(database, 'loops');
+
+  onValue(loopsRef, snapshot => {
+    container.innerHTML = '';
+    snapshot.forEach(child => {
+      const loop = child.val();
+      if (loop.creator === user.uid) {
+        const div = document.createElement("div");
+        div.textContent = `Loop ID: ${child.key}`;
+        container.appendChild(div);
+      }
+    });
+  });
 }
 
 onAuthStateChanged(auth, user => {
   if (user) {
-    showTab("mainTabs");
-    loadLoops();
-    loadUserDisplay();
-  } else {
-    showTab("authTabs");
+    showTab("allLoopsTab");
+    document.getElementById("authTabs").style.display = "none";
+    const userRef = ref(database, 'users/' + user.uid);
+    onValue(userRef, snapshot => {
+      const data = snapshot.val();
+      if (data?.username) headerUsername.textContent = data.username;
+      if (data?.photoURL) headerPhoto.src = data.photoURL;
+    });
+    displayAllLoops();
+    displayMyLoops();
   }
 });
 
-window.login = () => {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  signInWithEmailAndPassword(auth, email, password)
-    .catch(err => alert("Login failed: " + err.message));
-};
-
-window.register = () => {
-  const email = document.getElementById("registerEmail").value;
-  const password = document.getElementById("registerPassword").value;
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(userCred => {
-      set(ref(db, `users/${userCred.user.uid}`), {
-        email,
-        joined: new Date().toISOString()
-      });
-    })
-    .catch(err => alert("Registration failed: " + err.message));
-};
-
-window.logout = () => signOut(auth);
-
-window.saveUserProfile = () => {
-  const uid = auth.currentUser.uid;
-  const username = document.getElementById("username").value;
-  const file = document.getElementById("profilePhoto").files[0];
-  const userRef = ref(db, `users/${uid}`);
-
-  if (file) {
-    console.log("Uploading profile photo...");
-    const photoRef = sRef(storage, `profiles/${uid}`);
-    uploadBytes(photoRef, file)
-      .then(() => getDownloadURL(photoRef))
-      .then(url => {
-        console.log("Got download URL:", url);
-        return update(userRef, { username, photoURL: url });
-      })
-      .then(() => {
-        alert("Profile saved with photo!");
-        document.getElementById("userPhoto").src = photoURL;
-        document.getElementById("headerPhoto").src = photoURL + `?t=${Date.now()}`;
-        document.getElementById("headerUsername").textContent = username;
-      })
-      .catch(err => {
-        console.error("Photo upload failed:", err);
-        alert("Photo upload failed: " + err.message);
-      });
-  } else {
-    update(userRef, { username }).then(() => {
-      alert("Profile saved without photo.");
-      document.getElementById("headerUsername").textContent = username;
-    });
-  }
-};
-
-function loadUserDisplay() {
-  const uid = auth.currentUser.uid;
-  const userRef = ref(db, `users/${uid}`);
-  get(userRef).then(snapshot => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      console.log("User data loaded:", data);
-      if (data.username) document.getElementById("headerUsername").textContent = data.username;
-      if (data.photoURL) {
-        document.getElementById("userPhoto").src = data.photoURL;
-        document.getElementById("headerPhoto").src = data.photoURL + `?t=${Date.now()}`;
-      }
-    }
-  });
-}
-
-window.savePreferences = () => {
-  const uid = auth.currentUser.uid;
-  const preferences = {
-    climate: document.getElementById("climate").value,
-    pace: document.getElementById("pace").value,
-    budget: document.getElementById("budget").value,
-    activities: document.getElementById("activities").value.split(',').map(a => a.trim())
-  };
-  update(ref(db, `users/${uid}/preferences`), preferences).then(() => alert("Preferences saved."));
-};
-
-window.createLoop = () => {
-  const uid = auth.currentUser.uid;
-  const loopData = {
-    creator: uid,
-    timestamp: Date.now(),
-    participants: [uid]
-  };
-  push(ref(db, "loops"), loopData).then(() => alert("Loop created."));
-};
-
-function loadLoops() {
-  onValue(ref(db, "loops"), snap => {
-    const allLoops = document.getElementById("allLoops");
-    allLoops.innerHTML = "";
-    const loops = snap.val();
-    for (let id in loops) {
-      const loop = loops[id];
-      const div = document.createElement("div");
-      div.innerHTML = `<strong>Loop</strong> by ${getUsername(loop.creator)}<br>Participants: ${loop.participants.map(getUsername).join(", ")}<br><button onclick="joinLoop('${id}')">Join</button>`;
-      allLoops.appendChild(div);
-    }
-  });
-}
-
-function getUsername(uid) {
-  const userRef = ref(db, `users/${uid}`);
-  return get(userRef).then(snap => {
-    const data = snap.val();
-    return data?.username || data?.email || "Unknown";
-  });
-}
-
-window.joinLoop = id => {
-  const uid = auth.currentUser.uid;
-  const loopRef = ref(db, `loops/${id}`);
-  get(loopRef).then(snap => {
-    const loop = snap.val();
-    if (loop.participants.includes(uid)) {
-      alert("Already joined this loop.");
-    } else {
-      loop.participants.push(uid);
-      update(loopRef, { participants: loop.participants });
-    }
-  });
-};
+// Make functions accessible globally
+window.login = login;
+window.register = register;
+window.logout = logout;
+window.saveUserProfile = saveUserProfile;
+window.savePreferences = savePreferences;
+window.createLoop = createLoop;
+window.joinLoop = joinLoop;
