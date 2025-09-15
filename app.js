@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, updatePassword
+  signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import {
   getDatabase, ref, set, push, onValue, get, update
@@ -75,11 +75,22 @@ const budgetInput = document.getElementById("budget");
 const activitiesInput = document.getElementById("activities");
 const savePrefsBtn = document.getElementById("savePrefsBtn");
 
-// Loops
-const createLoopBtn = document.getElementById("createLoopBtn");
+// Loops page + form
 const allLoopsEl = document.getElementById("allLoops");
-const myLoopsEl = document.getElementById("myLoops");
 const matchedLoopsEl = document.getElementById("matchedLoops");
+const myLoopsEl = document.getElementById("myLoops");
+
+const openCreateLoop = document.getElementById("openCreateLoop");
+const createLoopForm = document.getElementById("createLoopForm");
+const submitCreateLoop = document.getElementById("submitCreateLoop");
+const cancelCreateLoop = document.getElementById("cancelCreateLoop");
+
+const loopTitle = document.getElementById("loopTitle");
+const loopCapacity = document.getElementById("loopCapacity");
+const loopLocation = document.getElementById("loopLocation");
+const loopStartAt = document.getElementById("loopStartAt");
+const loopDescription = document.getElementById("loopDescription");
+const loopActivities = document.getElementById("loopActivities");
 
 // ---- Helpers ----
 const DEFAULT_AVATAR =
@@ -112,7 +123,6 @@ function hideAllPages() {
 }
 
 function go(route) {
-  // change hash without scrolling
   if (location.hash !== route) location.hash = route;
   renderRoute();
 }
@@ -137,14 +147,39 @@ function scoreMatch(userPrefs, loopPrefs) {
   const la = new Set((loopPrefs.activities || []).map(a => a.toLowerCase()));
   const inter = [...ua].filter(a => la.has(a)).length;
   const union = new Set([...ua, ...la]).size || 1;
-  score += Math.round((inter / union) * 6); // up to 6 pts for activities
+  score += Math.round((inter / union) * 6); // up to 6 pts
 
   return score; // max ~15
 }
 
-function loopCardHTML(id, loop, currentUserId) {
+function dateFromInput(val) {
+  try { return val ? new Date(val).getTime() : null; } catch { return null; }
+}
+
+function fmtDate(ts) {
+  if (!ts) return "—";
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString();
+  } catch { return "—"; }
+}
+
+// cache of usernames to avoid N calls
+const userCache = new Map();
+async function getUsername(uid) {
+  if (userCache.has(uid)) return userCache.get(uid);
+  const snap = await get(ref(db, `users/${uid}/username`));
+  const name = snap.exists() ? snap.val() : uid;
+  userCache.set(uid, name);
+  return name;
+}
+
+function loopCard(loopId, loop, currentUserId) {
   const participants = loop.participants ? Object.keys(loop.participants) : [];
-  const youTag = loop.creator === currentUserId ? " • You" : "";
+  const count = participants.length;
+  const cap = loop.capacity || 0;
+  const full = cap && count >= cap;
+
   const prefs = loop.loopPrefs || {};
   const prefsLine = [
     prefs.climate || "—",
@@ -153,16 +188,35 @@ function loopCardHTML(id, loop, currentUserId) {
     (prefs.activities || []).slice(0,3).join(", ") || "—"
   ].join(" • ");
 
-  return `
-    <div class="loop">
-      <div><strong>Loop</strong> by ${loop.creator}${youTag}</div>
-      <div class="meta">Prefs: ${prefsLine}</div>
-      <div class="meta">Participants: ${participants.length}</div>
-      <div class="actions" style="margin-top:.6rem;">
-        <button data-join="${id}" type="button">Join</button>
-      </div>
+  const acts = (loop.activities || []).slice(0,4).join(", ");
+
+  const canEdit = loop.creator === currentUserId;
+
+  const container = document.createElement("div");
+  container.className = "loop";
+  container.innerHTML = `
+    <div class="row" style="justify-content:space-between;">
+      <div><strong>${loop.title || "Untitled Loop"}</strong></div>
+      <span class="badge">${count}/${cap || "∞"} ${cap && full ? "<span class='full'>(Full)</span>" : ""}</span>
+    </div>
+    <div class="meta">By <span data-creator-name>${loop.creatorUsername || loop.creator}</span> • ${fmtDate(loop.startAt)}</div>
+    <div>${loop.description || ""}</div>
+    <div class="meta">Location: ${loop.location || "—"}</div>
+    <div class="meta">Activities: ${acts || "—"}</div>
+    <div class="meta">Prefs: ${prefsLine}</div>
+    <div class="actions" style="margin-top:.6rem;">
+      <button data-join="${loopId}" type="button" ${full ? "disabled" : ""}>${full ? "Full" : "Join"}</button>
+      ${canEdit ? `<button data-edit="${loopId}" type="button">Edit</button>` : ""}
     </div>
   `;
+  // fill creator name from users if missing
+  if (!loop.creatorUsername) {
+    getUsername(loop.creator).then(name => {
+      const span = container.querySelector("[data-creator-name]");
+      if (span) span.textContent = name;
+    });
+  }
+  return container;
 }
 
 // ---- Router ----
@@ -197,7 +251,6 @@ loginBtn?.addEventListener("click", async () => {
 
 registerBtn?.addEventListener("click", async () => {
   try {
-    // 1) Create auth user
     const email = regEmail.value.trim();
     const password = regPassword.value;
     const username = (regUsername.value || email.split("@")[0]).trim();
@@ -205,7 +258,6 @@ registerBtn?.addEventListener("click", async () => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
 
-    // 2) Upload photo if chosen
     let photoURL = null;
     if (regPhoto.files && regPhoto.files.length > 0) {
       const file = regPhoto.files[0];
@@ -214,7 +266,6 @@ registerBtn?.addEventListener("click", async () => {
       photoURL = await getDownloadURL(photoRef);
     }
 
-    // 3) Save profile + preferences
     const preferences = {
       climate: regClimate.value || null,
       pace: regPace.value || null,
@@ -297,49 +348,126 @@ savePrefsBtn?.addEventListener("click", async () => {
   }
 });
 
-// ---- Loops ----
-createLoopBtn?.addEventListener("click", async () => {
+// ---- Create Loop Form Behaviors ----
+openCreateLoop?.addEventListener("click", () => {
+  createLoopForm.classList.toggle("hidden");
+});
+
+cancelCreateLoop?.addEventListener("click", () => {
+  createLoopForm.classList.add("hidden");
+  loopTitle.value = "";
+  loopCapacity.value = "4";
+  loopLocation.value = "";
+  loopStartAt.value = "";
+  loopDescription.value = "";
+  loopActivities.value = "";
+});
+
+submitCreateLoop?.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return alert("Please sign in.");
+
+  const title = (loopTitle.value || "").trim();
+  const capacity = Math.max(1, parseInt(loopCapacity.value || "1", 10));
+  const locationText = (loopLocation.value || "").trim();
+  const startAt = dateFromInput(loopStartAt.value);
+  const description = (loopDescription.value || "").trim();
+  const activities = readActivities(loopActivities.value);
+
+  if (!title) return alert("Please enter a title for your loop.");
 
   try {
     const uid = user.uid;
     const userSnap = await get(ref(db, `users/${uid}`));
     const udata = userSnap.val() || {};
-    const loopPrefs = udata.preferences || null; // snapshot user's prefs at creation
+    const loopPrefs = udata.preferences || null;
 
-    const loopsRef = ref(db, "loops");
-    const newRef = push(loopsRef);
+    const newRef = push(ref(db, "loops"));
     await set(newRef, {
       creator: uid,
+      creatorUsername: udata.username || user.email || "User",
       createdAt: Date.now(),
       participants: { [uid]: true },
-      loopPrefs
+      loopPrefs,
+      // new details:
+      title,
+      capacity,
+      location: locationText || null,
+      startAt: startAt || null,
+      description: description || null,
+      activities
     });
 
+    // reset form
+    cancelCreateLoop.click();
     alert("Loop created.");
   } catch (e) {
     alert(e.message);
   }
 });
 
-function bindJoinButtons(rootEl, currentUserId) {
-  rootEl.querySelectorAll("[data-join]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const loopId = btn.getAttribute("data-join");
+// ---- Loop Lists & Actions ----
+function bindLoopContainerEvents(container, currentUserId) {
+  container.addEventListener("click", async (e) => {
+    const joinBtn = e.target.closest("[data-join]");
+    const editBtn = e.target.closest("[data-edit]");
+
+    if (joinBtn) {
+      const loopId = joinBtn.getAttribute("data-join");
       try {
-        const pRef = ref(db, `loops/${loopId}/participants`);
-        const snap = await get(pRef);
-        const curr = snap.val() || {};
-        if (!curr[currentUserId]) {
-          curr[currentUserId] = true;
-          await set(pRef, curr);
+        const loopRef = ref(db, `loops/${loopId}`);
+        const snap = await get(loopRef);
+        if (!snap.exists()) return;
+
+        const loop = snap.val();
+        const participants = loop.participants ? Object.keys(loop.participants) : [];
+        const capacity = loop.capacity || 0;
+        const full = capacity && participants.length >= capacity;
+
+        if (full) return alert("This loop is full.");
+        if (loop.participants && loop.participants[currentUserId]) {
+          return alert("You already joined this loop.");
         }
+
+        const pRef = ref(db, `loops/${loopId}/participants`);
+        const curr = (await get(pRef)).val() || {};
+        curr[currentUserId] = true;
+        await set(pRef, curr);
         alert("Joined loop.");
-      } catch (e) {
-        alert(e.message);
+      } catch (err) {
+        alert(err.message);
       }
-    });
+    }
+
+    if (editBtn) {
+      const loopId = editBtn.getAttribute("data-edit");
+      try {
+        const loopRef = ref(db, `loops/${loopId}`);
+        const snap = await get(loopRef);
+        if (!snap.exists()) return;
+        const loop = snap.val();
+        if (loop.creator !== currentUserId) return alert("Only the creator can edit this loop.");
+
+        // Quick edit prompts (simple + fast)
+        const newTitle = prompt("Update title:", loop.title || "");
+        if (newTitle === null) return; // cancel
+        const newDesc = prompt("Update description:", loop.description || "");
+        if (newDesc === null) return;
+        const newCapStr = prompt("Update capacity (number):", String(loop.capacity || 4));
+        if (newCapStr === null) return;
+
+        const newCap = Math.max(1, parseInt(newCapStr, 10) || 1);
+        await update(loopRef, {
+          title: newTitle.trim() || "Untitled Loop",
+          description: (newDesc || "").trim(),
+          capacity: newCap
+        });
+
+        alert("Loop updated.");
+      } catch (err) {
+        alert(err.message);
+      }
+    }
   });
 }
 
@@ -351,15 +479,14 @@ function renderAllLoops(currentUserId) {
       allLoopsEl.innerHTML = `<p class="muted">No loops yet. Create the first one!</p>`;
       return;
     }
+    const frag = document.createDocumentFragment();
     snap.forEach(child => {
       const loop = child.val();
-      const html = loopCardHTML(child.key, loop, currentUserId);
-      const holder = document.createElement("div");
-      holder.innerHTML = html;
-      allLoopsEl.appendChild(holder);
+      frag.appendChild(loopCard(child.key, loop, currentUserId));
     });
-    bindJoinButtons(allLoopsEl, currentUserId);
+    allLoopsEl.appendChild(frag);
   }, (err) => alert(err.message));
+  bindLoopContainerEvents(allLoopsEl, currentUserId);
 }
 
 function renderMyLoops(currentUserId) {
@@ -370,19 +497,18 @@ function renderMyLoops(currentUserId) {
       myLoopsEl.innerHTML = `<p class="muted">No loops yet.</p>`;
       return;
     }
+    const frag = document.createDocumentFragment();
     snap.forEach(child => {
       const loop = child.val();
       const isCreator = loop.creator === currentUserId;
       const isParticipant = loop.participants && !!loop.participants[currentUserId];
       if (isCreator || isParticipant) {
-        const html = loopCardHTML(child.key, loop, currentUserId);
-        const holder = document.createElement("div");
-        holder.innerHTML = html;
-        myLoopsEl.appendChild(holder);
+        frag.appendChild(loopCard(child.key, loop, currentUserId));
       }
     });
-    bindJoinButtons(myLoopsEl, currentUserId);
+    myLoopsEl.appendChild(frag);
   }, (err) => alert(err.message));
+  bindLoopContainerEvents(myLoopsEl, currentUserId);
 }
 
 async function renderMatchedLoops(currentUserId) {
@@ -399,11 +525,10 @@ async function renderMatchedLoops(currentUserId) {
     return;
   }
 
-  // score loops
   const scored = [];
   loopsSnap.forEach(child => {
     const loop = child.val();
-    if (loop.creator === currentUserId) return; // exclude own loop from “matched”
+    if (loop.creator === currentUserId) return;
     const s = scoreMatch(myPrefs, loop.loopPrefs || null);
     scored.push({ id: child.key, loop, score: s });
   });
@@ -414,19 +539,17 @@ async function renderMatchedLoops(currentUserId) {
     return;
   }
 
+  const frag = document.createDocumentFragment();
   scored.forEach(item => {
-    const html = loopCardHTML(item.id, item.loop, currentUserId);
-    const holder = document.createElement("div");
-    holder.innerHTML = html;
-    // add score line
+    const card = loopCard(item.id, item.loop, currentUserId);
     const scoreP = document.createElement("p");
-    scoreP.className = "muted";
+    scoreP.className = "meta";
     scoreP.textContent = `Match score: ${item.score}`;
-    holder.firstElementChild.appendChild(scoreP);
-    matchedLoopsEl.appendChild(holder);
+    card.appendChild(scoreP);
+    frag.appendChild(card);
   });
-
-  bindJoinButtons(matchedLoopsEl, currentUserId);
+  matchedLoopsEl.appendChild(frag);
+  bindLoopContainerEvents(matchedLoopsEl, currentUserId);
 }
 
 // ---- Auth state & data wiring ----
@@ -463,7 +586,7 @@ onAuthStateChanged(auth, (user) => {
       renderRoute();
     }
 
-    // when entering matched page, compute matches
+    // recompute matches when visiting matched page
     window.addEventListener("hashchange", () => {
       if (location.hash === "#/matched") {
         renderMatchedLoops(user.uid);
