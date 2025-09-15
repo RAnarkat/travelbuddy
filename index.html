@@ -14,10 +14,11 @@
       --line: #e6e8eb;
       --brand: #0f766e;
       --brand-ink: #fff;
+      --danger: #b91c1c;
     }
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); }
-    header { background:#fff; border-bottom:1px solid var(--line); }
+    header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
     .wrap { max-width:1000px; margin:0 auto; padding:1rem; display:flex; align-items:center; gap:1rem; }
     .brand { display:flex; align-items:center; gap:.6rem; }
     .brand h1 { font-size:1.25rem; margin:0; }
@@ -37,7 +38,7 @@
     .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04); }
     .stack { display:grid; gap:1rem; }
     .grid { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
+    .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-6 { grid-column: span 6; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
 
     h2 { margin:0 0 .5rem; font-size:1.25rem; }
     h3 { margin:0 0 .5rem; font-size:1.05rem; color:#111; }
@@ -48,18 +49,20 @@
       width:100%; padding:.7rem .8rem; border:1px solid var(--line);
       border-radius:10px; font-size:1rem; background:#fff; color:var(--ink);
     }
+    input[type="datetime-local"] { padding:.6rem .8rem; }
     textarea { min-height:100px; }
     button.primary { background:var(--brand); color:var(--brand-ink); border-color:transparent; }
     button.primary:hover { filter:brightness(0.95); }
+    button.ghost { background:#fff; border:1px solid var(--line); }
     .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
     .actions { display:flex; gap:.5rem; flex-wrap:wrap; }
-
-    .loop { border:1px solid var(--line); border-radius:12px; padding:.8rem; }
-    .loop .meta { color:var(--muted); font-size:.9rem; }
-
     .hidden { display:none; }
     .center { text-align:center; }
     .spacer { height:12px; }
+    .badge { display:inline-block; padding:.2rem .5rem; border-radius:999px; background:#eef2f6; color:#334155; font-size:.8rem; }
+    .loop { border:1px solid var(--line); border-radius:12px; padding:.8rem; display:grid; gap:.4rem; }
+    .meta { color:var(--muted); font-size:.9rem; }
+    .full { color:var(--danger); font-weight:600; }
   </style>
 </head>
 <body>
@@ -75,7 +78,7 @@
         <span id="chipName">Guest</span>
       </div>
 
-      <nav id="navSignedOut" class="">
+      <nav id="navSignedOut">
         <a href="#/home">Home</a>
         <a href="#/login">Login</a>
         <a href="#/register">Register</a>
@@ -172,7 +175,7 @@
           </div>
           <div class="col-12">
             <label>Activities (comma separated)</label>
-            <input type="text" id="regActivities" placeholder="hiking, beach, food, museums" />
+            <input type="text" id="regActivities" placeholder="hiking, sushi, museums" />
           </div>
         </div>
 
@@ -188,8 +191,44 @@
       <div class="card stack">
         <div class="row" style="justify-content:space-between;">
           <h2>All Loops</h2>
-          <button id="createLoopBtn" class="primary" type="button" style="width:auto;">Create Loop</button>
+          <button id="openCreateLoop" class="primary" type="button" style="width:auto;">Create Loop</button>
         </div>
+
+        <!-- Create Loop Form -->
+        <div id="createLoopForm" class="card hidden">
+          <h3>Create a Loop</h3>
+          <div class="grid">
+            <div class="col-8">
+              <label>Title (what is this loop about?)</label>
+              <input type="text" id="loopTitle" placeholder="Sushi Crawl in Tokyo" />
+            </div>
+            <div class="col-4">
+              <label>Capacity (max participants)</label>
+              <input type="number" id="loopCapacity" min="1" value="4" />
+            </div>
+            <div class="col-6">
+              <label>Location</label>
+              <input type="text" id="loopLocation" placeholder="Shibuya, Tokyo" />
+            </div>
+            <div class="col-6">
+              <label>Date & Time</label>
+              <input type="datetime-local" id="loopStartAt" />
+            </div>
+            <div class="col-12">
+              <label>Description</label>
+              <textarea id="loopDescription" placeholder="Hop between 3–4 sushi spots; casual vibe."></textarea>
+            </div>
+            <div class="col-12">
+              <label>Activities (comma separated, optional)</label>
+              <input type="text" id="loopActivities" placeholder="sushi, foodies, walking" />
+            </div>
+          </div>
+          <div class="actions">
+            <button id="submitCreateLoop" class="primary" type="button">Create</button>
+            <button id="cancelCreateLoop" type="button" class="ghost">Cancel</button>
+          </div>
+        </div>
+
         <div id="allLoops" class="stack"></div>
       </div>
     </section>
@@ -255,7 +294,7 @@
           </div>
           <div class="col-12">
             <label>Activities (comma separated)</label>
-            <input type="text" id="activities" placeholder="hiking, beach, food, museums" />
+            <input type="text" id="activities" placeholder="hiking, sushi, museums" />
           </div>
         </div>
         <div>
