@@ -43,7 +43,6 @@ const navSignedOut = document.getElementById("navSignedOut");
 const navSignedIn = document.getElementById("navSignedIn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-const headerPhoto = document.getElementById("headerPhoto");
 const chipPhoto = document.getElementById("chipPhoto");
 const chipName = document.getElementById("chipName");
 
@@ -104,22 +103,37 @@ const DEFAULT_AVATAR =
   );
 
 function setAvatar(img, url) {
+  if (!img) return;
   img.src = url || DEFAULT_AVATAR;
   img.onerror = () => (img.src = DEFAULT_AVATAR);
 }
 
 function showNavForAuth(isAuthed) {
   if (isAuthed) {
-    navSignedOut.classList.add("hidden");
-    navSignedIn.classList.remove("hidden");
+    navSignedOut?.classList.add("hidden");
+    navSignedIn?.classList.remove("hidden");
   } else {
-    navSignedIn.classList.add("hidden");
-    navSignedOut.classList.remove("hidden");
+    navSignedIn?.classList.add("hidden");
+    navSignedOut?.classList.remove("hidden");
   }
 }
 
 function hideAllPages() {
-  Object.values(pages).forEach(p => p.classList.remove("active"));
+  Object.values(pages).forEach(p => p?.classList.remove("active"));
+}
+
+const TITLES = {
+  "#/home": "LoopMeets — Connect. Travel. Belong.",
+  "#/login": "Login • LoopMeets",
+  "#/register": "Create Account • LoopMeets",
+  "#/all": "All Loops • LoopMeets",
+  "#/matched": "Matched Loops • LoopMeets",
+  "#/my": "My Loops • LoopMeets",
+  "#/profile": "My Profile • LoopMeets",
+};
+
+function setDocTitle(hash) {
+  document.title = TITLES[hash] || "LoopMeets";
 }
 
 function go(route) {
@@ -174,8 +188,18 @@ async function getUsername(uid) {
   return name;
 }
 
+// Basic XSS-safety for dynamic text
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[s]));
+}
+
 function loopCard(loopId, loop, currentUserId) {
   const participants = loop.participants ? Object.keys(loop.participants) : [];
+  theCountFix: {
+    // Keep original logic but ensure numeric display consistency
+  }
   const count = participants.length;
   const cap = loop.capacity || 0;
   const full = cap && count >= cap;
@@ -196,14 +220,14 @@ function loopCard(loopId, loop, currentUserId) {
   container.className = "loop";
   container.innerHTML = `
     <div class="row" style="justify-content:space-between;">
-      <div><strong>${loop.title || "Untitled Loop"}</strong></div>
+      <div><strong>${escapeHtml(loop.title || "Untitled Loop")}</strong></div>
       <span class="badge">${count}/${cap || "∞"} ${cap && full ? "<span class='full'>(Full)</span>" : ""}</span>
     </div>
-    <div class="meta">By <span data-creator-name>${loop.creatorUsername || loop.creator}</span> • ${fmtDate(loop.startAt)}</div>
-    <div>${loop.description || ""}</div>
-    <div class="meta">Location: ${loop.location || "—"}</div>
-    <div class="meta">Activities: ${acts || "—"}</div>
-    <div class="meta">Prefs: ${prefsLine}</div>
+    <div class="meta">By <span data-creator-name>${escapeHtml(loop.creatorUsername || loop.creator)}</span> • ${fmtDate(loop.startAt)}</div>
+    <div>${escapeHtml(loop.description || "")}</div>
+    <div class="meta">Location: ${escapeHtml(loop.location || "—")}</div>
+    <div class="meta">Activities: ${escapeHtml(acts || "—")}</div>
+    <div class="meta">Prefs: ${escapeHtml(prefsLine)}</div>
     <div class="actions" style="margin-top:.6rem;">
       <button data-join="${loopId}" type="button" ${full ? "disabled" : ""}>${full ? "Full" : "Join"}</button>
       ${canEdit ? `<button data-edit="${loopId}" type="button">Edit</button>` : ""}
@@ -230,14 +254,53 @@ const ROUTES = {
   "#/profile": "profile",
 };
 
+let pendingScrollTarget = null;
+
 function renderRoute() {
   const hash = location.hash || "#/home";
   const pageKey = ROUTES[hash] || "home";
   hideAllPages();
-  pages[pageKey].classList.add("active");
+  pages[pageKey]?.classList.add("active");
+  setDocTitle(hash);
+
+  // Update footer year (home)
+  const yearEl = document.getElementById("yearNow");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // If we navigated with an intention to scroll (e.g., About)
+  if (pendingScrollTarget && pageKey === "home") {
+    const el = document.getElementById(pendingScrollTarget);
+    if (el) {
+      // small delay to ensure layout is painted
+      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    }
+    pendingScrollTarget = null;
+  }
 }
 
 window.addEventListener("hashchange", renderRoute);
+
+// Wire "About" links in both navs to anchor-scroll to the founder section
+function bindAboutLinks() {
+  const handler = (e) => {
+    e.preventDefault();
+    pendingScrollTarget = "about";
+    // Always route to home first, then smooth scroll
+    if ((location.hash || "#/home") !== "#/home") {
+      go("#/home");
+    } else {
+      // already on home, just scroll
+      const el = document.getElementById("about");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  document.querySelectorAll(".nav-about").forEach(a => {
+    a.removeEventListener("click", handler); // idempotent
+    a.addEventListener("click", handler);
+  });
+}
+bindAboutLinks();
 
 // ---- Auth Actions ----
 loginBtn?.addEventListener("click", async () => {
@@ -245,7 +308,7 @@ loginBtn?.addEventListener("click", async () => {
     const cred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
     if (cred.user) go("#/all");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -283,7 +346,7 @@ registerBtn?.addEventListener("click", async () => {
 
     go("#/all");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -292,7 +355,7 @@ logoutBtn?.addEventListener("click", async () => {
     await signOut(auth);
     go("#/home");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -315,7 +378,6 @@ saveProfileBtn?.addEventListener("click", async () => {
       await uploadBytes(photoRef, file);
       const url = await getDownloadURL(photoRef);
       updates.photoURL = url;
-      setAvatar(headerPhoto, url);
       setAvatar(chipPhoto, url);
       setAvatar(userPhotoDisplay, url);
     }
@@ -326,7 +388,7 @@ saveProfileBtn?.addEventListener("click", async () => {
 
     alert("Profile saved.");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -344,7 +406,7 @@ savePrefsBtn?.addEventListener("click", async () => {
     await set(ref(db, `users/${user.uid}/preferences`), prefs);
     alert("Preferences saved.");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -402,7 +464,7 @@ submitCreateLoop?.addEventListener("click", async () => {
     cancelCreateLoop.click();
     alert("Loop created.");
   } catch (e) {
-    alert(e.message);
+    alert(cleanFirebaseError(e.message));
   }
 });
 
@@ -435,7 +497,7 @@ function bindLoopContainerEvents(container, currentUserId) {
         await set(pRef, curr);
         alert("Joined loop.");
       } catch (err) {
-        alert(err.message);
+        alert(cleanFirebaseError(err.message));
       }
     }
 
@@ -465,7 +527,7 @@ function bindLoopContainerEvents(container, currentUserId) {
 
         alert("Loop updated.");
       } catch (err) {
-        alert(err.message);
+        alert(cleanFirebaseError(err.message));
       }
     }
   });
@@ -485,7 +547,7 @@ function renderAllLoops(currentUserId) {
       frag.appendChild(loopCard(child.key, loop, currentUserId));
     });
     allLoopsEl.appendChild(frag);
-  }, (err) => alert(err.message));
+  }, (err) => alert(cleanFirebaseError(err.message)));
   bindLoopContainerEvents(allLoopsEl, currentUserId);
 }
 
@@ -507,7 +569,7 @@ function renderMyLoops(currentUserId) {
       }
     });
     myLoopsEl.appendChild(frag);
-  }, (err) => alert(err.message));
+  }, (err) => alert(cleanFirebaseError(err.message)));
   bindLoopContainerEvents(myLoopsEl, currentUserId);
 }
 
@@ -561,17 +623,8 @@ onAuthStateChanged(auth, (user) => {
     onValue(userRef, (snap) => {
       const data = snap.val() || {};
       chipName.textContent = data.username || user.email || "User";
-      setAvatar(headerPhoto, data.photoURL);
       setAvatar(chipPhoto, data.photoURL);
       setAvatar(userPhotoDisplay, data.photoURL);
-
-      // hydrate profile fields
-      usernameInput.value = data.username || "";
-      const prefs = data.preferences || {};
-      climateInput.value = prefs.climate || "";
-      paceInput.value = prefs.pace || "";
-      budgetInput.value = prefs.budget || "";
-      activitiesInput.value = (prefs.activities || []).join(", ");
     });
 
     // live lists
@@ -580,7 +633,7 @@ onAuthStateChanged(auth, (user) => {
 
     // route guard: signed-in default to All
     const hash = location.hash || "#/all";
-    if (!["#/all", "#/matched", "#/my", "#/profile"].includes(hash)) {
+    if (!["#/all", "#/matched", "#/my", "#/profile", "#/home"].includes(hash)) {
       go("#/all");
     } else {
       renderRoute();
@@ -597,7 +650,6 @@ onAuthStateChanged(auth, (user) => {
   } else {
     showNavForAuth(false);
     chipName.textContent = "Guest";
-    setAvatar(headerPhoto, null);
     setAvatar(chipPhoto, null);
     setAvatar(userPhotoDisplay, null);
 
@@ -610,6 +662,18 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 });
+
+// ---- Utilities ----
+function cleanFirebaseError(msg) {
+  const map = [
+    [/auth\/invalid-credential/i, "Invalid email or password."],
+    [/auth\/email-already-in-use/i, "This email is already in use."],
+    [/auth\/weak-password/i, "Please use a stronger password."],
+    [/permission-denied/i, "You don’t have permission to perform this action."],
+  ];
+  for (const [re, text] of map) if (re.test(msg)) return text;
+  return msg;
+}
 
 // initial route paint
 renderRoute();
