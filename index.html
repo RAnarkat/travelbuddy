@@ -1,234 +1,733 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- =========================================================
+       LoopMeets — Single Page App
+       Expanded, readable HTML & CSS (no minification)
+       SEO base tags (route-specific tags are set in app.js)
+       ========================================================= -->
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Proper viewport for responsive layouts -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Document title (will be dynamically updated per route) -->
   <title>LoopMeets — Connect. Travel. Belong.</title>
 
-  <!-- Base SEO (route-specific tags are enhanced dynamically by app.js) -->
-  <meta name="robots" content="index,follow">
-  <meta name="description" content="LoopMeets matches solo travelers with similar interests to share authentic experiences and form lasting friendships.">
-  <meta name="keywords" content="LoopMeets, Roshni Anarkat, solo travel, travel groups, meet travelers, matching, activities">
-  <link rel="canonical" href="/" />
-  <meta property="og:title" content="LoopMeets — Connect. Travel. Belong.">
-  <meta property="og:description" content="Match with travelers who share your vibe. Create loops, join experiences, and meet your people.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="/" />
-  <meta name="twitter:card" content="summary_large_image">
+  <!-- Base SEO (dynamic tags added/updated in app.js per route) -->
+  <meta name="robots" content="index,follow" />
+  <meta
+    name="description"
+    content="LoopMeets matches solo travelers with similar interests to share authentic experiences and form lasting friendships."
+  />
+  <meta
+    name="keywords"
+    content="LoopMeets, Roshni Anarkat, solo travel, travel groups, meet travelers, matching, activities"
+  />
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%230f766e%22/><text x=%2250%22 y=%2258%22 font-size=%2238%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-family=%22Arial%22>LM</text></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Canonical (updated by app.js per route to pretty path) -->
+  <link rel="canonical" href="https://loopmeets.com/" />
 
+  <!-- Open Graph -->
+  <meta property="og:title" content="LoopMeets — Connect. Travel. Belong." />
+  <meta
+    property="og:description"
+    content="Match with travelers who share your vibe. Create loops, join experiences, and meet your people."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://loopmeets.com/" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Theming -->
+  <meta name="theme-color" content="#0f766e" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Favicon (inline, no extra file needed) -->
+  <link
+    rel="icon"
+    href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="%230f766e"/><text x="50" y="58" font-size="38" text-anchor="middle" fill="%23fff" font-family="Arial">LM</text></svg>'
+  />
+
+  <!-- =========================================================
+       Styles
+       ========================================================= -->
   <style>
+    /* Root palette */
     :root {
-      --bg: #f6f7f8;
-      --card: #ffffff;
-      --ink: #1f2937;
-      --muted: #6b7280;
-      --line: #e6e8eb;
-      --brand: #0f766e;
-      --brand-ink: #ffffff;
-      --danger: #b91c1c;
-      --accent: #0ea5a4;
+      --bg:         #f6f7f8;
+      --card:       #ffffff;
+      --ink:        #1f2937;
+      --muted:      #6b7280;
+      --line:       #e6e8eb;
+
+      --brand:      #0f766e;
+      --brand-ink:  #ffffff;
+      --danger:     #b91c1c;
+      --accent:     #0ea5a4;
     }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); }
-    a { color: var(--brand); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+
+    /* Resets / base */
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
 
     /* Buttons */
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.7rem 1rem; border-radius:10px; border:1px solid var(--line); font-weight:600; cursor:pointer; text-decoration:none; transition: background .15s ease, transform .06s ease; }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background:var(--brand); color:var(--brand-ink); border-color:transparent; }
-    .btn-primary:hover { filter:brightness(0.95); text-decoration:none; }
-    .btn-ghost { background:#fff; color:var(--ink); }
-    .btn-ghost:hover { background:#f2f3f5; text-decoration:none; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
 
-    /* Header */
-    header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
-    .wrap { max-width:1100px; margin:0 auto; padding:0.8rem 1rem; display:flex; align-items:center; gap:1rem; }
-    .brand { display:flex; align-items:center; gap:.7rem; }
-    .brand h1 { font-size:1.15rem; margin:0; letter-spacing:0.2px; }
-    .brand .mark { width:32px; height:32px; border-radius:12px; background:var(--brand); display:grid; place-items:center; color:#fff; font-weight:700; }
-    nav { margin-left:auto; display:flex; gap:.5rem; flex-wrap:wrap; }
-    nav a, nav button { appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink); padding:.5rem .9rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none; transition: background .15s ease, transform .06s ease; }
-    nav a:hover, nav button:hover { background:#f2f3f5; }
-    nav a.primary-btn { border-color: transparent; background: var(--brand); color: var(--brand-ink); }
-    nav a.primary-btn:hover { filter:brightness(0.95); }
-    nav a:active, nav button:active { transform: translateY(1px); }
+      padding: .7rem 1rem;
 
-    .userchip { display:flex; align-items:center; gap:.5rem; padding:.2rem .6rem; border:1px solid var(--line); border-radius:999px; }
-    .userchip img { width:28px; height:28px; border-radius:50%; object-fit:cover; }
+      border-radius: 10px;
+      border: 1px solid var(--line);
 
-    /* Layout */
-    main { max-width:1100px; margin:2rem auto; padding:0 1rem; }
-    .page { display:none; }
-    .page.active { display:block; }
+      font-weight: 600;
+      cursor: pointer;
+
+      text-decoration: none;
+
+      transition: background .15s ease, transform .06s ease;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: var(--brand-ink);
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(0.95);
+      text-decoration: none;
+    }
+
+    .btn-ghost {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn-ghost:hover {
+      background: #f2f3f5;
+      text-decoration: none;
+    }
+
+    /* Header + nav */
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: .8rem 1rem;
+
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+
+    .brand .mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: var(--brand);
+
+      display: grid;
+      place-items: center;
+
+      color: #fff;
+      font-weight: 700;
+    }
+
+    nav {
+      margin-left: auto;
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    nav a,
+    nav button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+
+      padding: .5rem .9rem;
+      border-radius: 10px;
+
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+
+      transition: background .15s ease, transform .06s ease;
+    }
+
+    nav a:hover,
+    nav button:hover {
+      background: #f2f3f5;
+    }
+
+    nav a.primary-btn {
+      border-color: transparent;
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    nav a.primary-btn:hover {
+      filter: brightness(0.95);
+    }
+
+    nav a:active,
+    nav button:active {
+      transform: translateY(1px);
+    }
+
+    .userchip {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+
+      padding: .2rem .6rem;
+
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+
+    .userchip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Main layout */
+    main {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
 
     /* Cards & grids */
-    .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:1.1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); }
-    .card.padded { padding:1.6rem; }
-    .stack { display:grid; gap:1rem; }
-    .grid { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; } .col-5 { grid-column: span 5; }
-    .col-6 { grid-column: span 6; } .col-7 { grid-column: span 7; } .col-8 { grid-column: span 8; } .col-12 { grid-column: span 12; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.1rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
 
-    h2 { margin:0 0 .6rem; font-size:1.35rem; }
-    h3 { margin:0 0 .5rem; font-size:1.1rem; color:#111; }
-    p.muted { color:var(--muted); margin:.25rem 0 0; line-height:1.6; }
+    .card.padded {
+      padding: 1.6rem;
+    }
 
-    label { font-size:.9rem; color:#1b1b1b; }
-    input, select, button, textarea { width:100%; padding:.7rem .8rem; border:1px solid var(--line); border-radius:10px; font-size:1rem; background:#fff; color:var(--ink); }
-    input[type="datetime-local"] { padding:.6rem .8rem; }
-    textarea { min-height:100px; }
-    button.primary { background:var(--brand); color:var(--brand-ink); border-color:transparent; }
-    button.primary:hover { filter:brightness(0.95); }
-    button.ghost { background:#fff; border:1px solid var(--line); }
-    .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
-    .actions { display:flex; gap:.6rem; flex-wrap:wrap; }
-    .hidden { display:none !important; }
-    .center { text-align:center; }
-    .spacer { height:14px; }
-    .badge { display:inline-block; padding:.25rem .6rem; border-radius:999px; background:#eef2f6; color:#334155; font-size:.82rem; }
-    .loop { border:1px solid var(--line); border-radius:12px; padding:.9rem; display:grid; gap:.45rem; }
-    .meta { color:var(--muted); font-size:.92rem; }
-    .full { color:var(--danger); font-weight:600; }
+    .stack {
+      display: grid;
+      gap: 1rem;
+    }
 
-    /* --- HOME --- */
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .col-3  { grid-column: span 3;  }
+    .col-4  { grid-column: span 4;  }
+    .col-5  { grid-column: span 5;  }
+    .col-6  { grid-column: span 6;  }
+    .col-7  { grid-column: span 7;  }
+    .col-8  { grid-column: span 8;  }
+    .col-12 { grid-column: span 12; }
+
+    h2 {
+      margin: 0 0 .6rem;
+      font-size: 1.35rem;
+    }
+
+    h3 {
+      margin: 0 0 .5rem;
+      font-size: 1.1rem;
+      color: #111;
+    }
+
+    p.muted {
+      color: var(--muted);
+      margin: .25rem 0 0;
+      line-height: 1.6;
+    }
+
+    label {
+      font-size: .9rem;
+      color: #1b1b1b;
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      width: 100%;
+      padding: .7rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input[type="datetime-local"] {
+      padding: .6rem .8rem;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    button.primary {
+      background: var(--brand);
+      color: var(--brand-ink);
+      border-color: transparent;
+    }
+
+    button.primary:hover {
+      filter: brightness(0.95);
+    }
+
+    button.ghost {
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .row {
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .actions {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .spacer {
+      height: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .25rem .6rem;
+      border-radius: 999px;
+      background: #eef2f6;
+      color: #334155;
+      font-size: .82rem;
+    }
+
+    .loop {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: .9rem;
+      display: grid;
+      gap: .45rem;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .full {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    /* Home hero + sections */
     .hero {
-      background: radial-gradient(1200px 600px at 10% -20%, rgba(14,165,164,.08), transparent 60%),
-                  radial-gradient(800px 400px at 95% 10%, rgba(15,118,110,.07), transparent 50%);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:2rem;
-      display:grid; gap:1rem;
+      background:
+        radial-gradient(1200px 600px at 10% -20%, rgba(14,165,164,.08), transparent 60%),
+        radial-gradient(800px 400px at 95% 10%, rgba(15,118,110,.07), transparent 50%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 2rem;
+      display: grid;
+      gap: 1rem;
     }
-    .hero h1 { font-size:2rem; margin:0; letter-spacing: .2px; }
-    .hero p { font-size:1.05rem; color:#374151; margin:0.25rem 0 0; max-width:60ch; line-height:1.7; }
-    .cta { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.5rem; }
-    .pill { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .6rem; background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; border-radius:999px; font-weight:600; font-size:.86rem; }
 
-    .features { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .feature { grid-column: span 4; background:#fff; border:1px solid var(--line); border-radius:14px; padding:1rem; }
-    .feature h3 { margin:0; font-size:1.02rem; }
-    .feature p { margin:.4rem 0 0; color:var(--muted); line-height:1.6; }
+    .hero h1 {
+      font-size: 2rem;
+      margin: 0;
+      letter-spacing: .2px;
+    }
 
-    .founder { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); align-items:stretch; }
-    .founder .bio { grid-column: span 7; }
-    .founder .card { grid-column: span 5; display:grid; gap:.7rem; }
-    .founder .badge-title { display:inline-block; font-weight:700; color:#0f766e; background:#ecfeff; border:1px solid #99f6e4; padding:.2rem .5rem; border-radius:999px; font-size:.82rem; }
-    .founder .head { display:flex; align-items:center; gap:.8rem; }
-    .founder .head img { width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid #e6e8eb; }
+    .hero p {
+      font-size: 1.05rem;
+      color: #374151;
+      margin: .25rem 0 0;
+      max-width: 60ch;
+      line-height: 1.7;
+    }
 
-    .howitworks { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .step { grid-column: span 4; border:1px solid var(--line); border-radius:14px; padding:1rem; background:#fff; }
-    .step .num { width:28px; height:28px; border-radius:999px; background:var(--brand); color:#fff; display:inline-grid; place-items:center; font-weight:700; margin-right:.5rem; }
+    .cta {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-top: .5rem;
+    }
 
-    .footer { color:var(--muted); font-size:.9rem; text-align:center; padding:1.5rem 0 2rem; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .6rem;
+      background: #ecfeff;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .86rem;
+    }
 
-    /* --- ABOUT (distinct layout) --- */
+    .features {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .feature {
+      grid-column: span 4;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .founder {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+      align-items: stretch;
+    }
+
+    .founder .bio {
+      grid-column: span 7;
+    }
+
+    .founder .card {
+      grid-column: span 5;
+      display: grid;
+      gap: .7rem;
+    }
+
+    .founder .badge-title {
+      display: inline-block;
+      font-weight: 700;
+      color: #0f766e;
+      background: #ecfeff;
+      border: 1px solid #99f6e4;
+      padding: .2rem .5rem;
+      border-radius: 999px;
+      font-size: .82rem;
+    }
+
+    .founder .head {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+
+    .founder .head img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e6e8eb;
+    }
+
+    .howitworks {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .step {
+      grid-column: span 4;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      background: #fff;
+    }
+
+    .step .num {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--brand);
+      color: #fff;
+      display: inline-grid;
+      place-items: center;
+      font-weight: 700;
+      margin-right: .5rem;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+      padding: 1.5rem 0 2rem;
+    }
+
+    /* About page */
     .about-hero {
-      display:grid; gap:1rem;
-      border:1px solid var(--line); border-radius:18px; padding:2rem;
-      background: linear-gradient(135deg, rgba(14,165,164,.1), rgba(14,165,164,0) 50%),
-                  linear-gradient(0deg, #fff, #fff);
+      display: grid;
+      gap: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 2rem;
+      background:
+        linear-gradient(135deg, rgba(14,165,164,.1), rgba(14,165,164,0) 50%),
+        linear-gradient(0deg, #fff, #fff);
     }
-    .about-hero h1 { margin:0; font-size:2rem; }
-    .about-hero p { margin:.25rem 0 0; color:#374151; max-width:70ch; line-height:1.7; }
 
-    .about-grid { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .about-card { grid-column: span 6; background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.2rem; }
-    .about-aside { grid-column: span 6; }
-    .about-tag { display:inline-block; padding:.2rem .6rem; background:#ecfeff; border:1px solid #99f6e4; color:#0f766e; border-radius:999px; font-weight:700; font-size:.82rem; }
+    .about-hero h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
 
-    .values { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
-    .value { grid-column: span 4; border:1px solid var(--line); border-radius:14px; padding:1rem; background:#fff; }
+    .about-hero p {
+      margin: .25rem 0 0;
+      color: #374151;
+      max-width: 70ch;
+      line-height: 1.7;
+    }
 
+    .about-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .about-card {
+      grid-column: span 6;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.2rem;
+    }
+
+    .about-aside {
+      grid-column: span 6;
+    }
+
+    .about-tag {
+      display: inline-block;
+      padding: .2rem .6rem;
+      background: #ecfeff;
+      border: 1px solid #99f6e4;
+      color: #0f766e;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .82rem;
+    }
+
+    .values {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .value {
+      grid-column: span 4;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1rem;
+      background: #fff;
+    }
+
+    /* Responsive tweaks */
     @media (max-width: 900px) {
       .feature { grid-column: span 6; }
-      .founder .bio { grid-column: span 12; }
-      .founder .card { grid-column: span 12; }
-      .step { grid-column: span 6; }
-      .about-card { grid-column: span 12; }
+      .founder .bio,
+      .founder .card,
+      .about-card,
       .about-aside { grid-column: span 12; }
-      .value { grid-column: span 6; }
+      .step, .value { grid-column: span 6; }
     }
+
     @media (max-width: 600px) {
-      .feature { grid-column: span 12; }
-      .step { grid-column: span 12; }
-      .value { grid-column: span 12; }
+      .feature, .step, .value { grid-column: span 12; }
     }
   </style>
 </head>
+
 <body>
+  <!-- =========================================================
+       Header
+       ========================================================= -->
   <header>
     <div class="wrap">
+
       <div class="brand" aria-label="LoopMeets">
         <div class="mark" aria-hidden="true">LM</div>
         <h1>LoopMeets</h1>
       </div>
 
       <div class="userchip" id="userChip" title="Signed out">
-        <img id="chipPhoto" alt="User avatar">
+        <img id="chipPhoto" alt="User avatar" />
         <span id="chipName">Guest</span>
       </div>
 
-      <!-- Signed-out nav -->
+      <!-- Signed-out Navigation -->
       <nav id="navSignedOut" aria-label="Primary">
         <a href="#/home">Home</a>
-        <a href="#/about">About</a>
+
+        <!-- About link anchors directly to the founder section -->
+        <a href="#/about#founder">About</a>
+
         <a href="#/login">Login</a>
         <a class="primary-btn" href="#/register">Get Started</a>
       </nav>
 
-      <!-- Signed-in nav -->
+      <!-- Signed-in Navigation -->
       <nav id="navSignedIn" class="hidden" aria-label="Signed-in navigation">
         <a href="#/home">Home</a>
-        <a href="#/about">About</a>
+        <a href="#/about#founder">About</a>
         <a href="#/all">All Loops</a>
         <a href="#/matched">Matched</a>
         <a href="#/my">My Loops</a>
         <a href="#/profile">My Profile</a>
         <button id="logoutBtn" type="button">Logout</button>
       </nav>
+
     </div>
   </header>
 
+  <!-- =========================================================
+       Main
+       ========================================================= -->
   <main class="stack">
 
-    <!-- HOME -->
-    <section id="page-home" class="page active" role="region" aria-labelledby="home-title">
+    <!-- =============== HOME PAGE =============== -->
+    <section
+      id="page-home"
+      class="page active"
+      role="region"
+      aria-labelledby="home-title"
+    >
       <div class="hero">
         <span class="pill">Connect. Travel. Belong.</span>
-        <h1 id="home-title">Meet travelers who share your vibe — then explore together.</h1>
+
+        <h1 id="home-title">
+          Meet travelers who share your vibe — then explore together.
+        </h1>
+
         <p>
           LoopMeets is an interest-based matching platform for solo travelers.
           Create small activities (we call them “loops”), join plans that match your pace and budget,
           and turn new places into shared memories.
         </p>
+
         <div class="cta">
-          <a class="btn btn-primary" href="#/register" aria-label="Create an account and get started">Join LoopMeets</a>
-          <a class="btn btn-ghost" href="#/login" aria-label="Sign in to your account">I already have an account</a>
-          <a class="btn btn-ghost" href="#/all" aria-label="Browse all loops">Browse loops</a>
+          <a class="btn btn-primary" href="#/register">Join LoopMeets</a>
+          <a class="btn btn-ghost" href="#/login">I already have an account</a>
+          <a class="btn btn-ghost" href="#/all">Browse loops</a>
         </div>
       </div>
 
-      <div class="features" style="margin-top:1rem;">
+      <div class="features" style="margin-top: 1rem;">
         <div class="feature">
           <h3>Smart Matching</h3>
-          <p>We match by climate preference, travel pace, budget, and shared activities — so every loop feels right for you.</p>
+          <p>
+            We match by climate preference, travel pace, budget, and shared activities —
+            so every loop feels right for you.
+          </p>
         </div>
+
         <div class="feature">
           <h3>Small & Safe Groups</h3>
-          <p>Loops cap at a reasonable size to keep plans intimate, flexible, and easier to coordinate.</p>
+          <p>
+            Loops cap at a reasonable size to keep plans intimate, flexible, and easier to coordinate.
+          </p>
         </div>
+
         <div class="feature">
           <h3>Effortless Planning</h3>
-          <p>Create a loop in seconds, add a description and time, and invite others to join — no group chats required.</p>
+          <p>
+            Create a loop in seconds, add a description and time, and invite others to join —
+            no group chats required.
+          </p>
         </div>
       </div>
 
-      <div class="founder" style="margin-top:1rem;">
+      <div class="founder" style="margin-top: 1rem;">
         <div class="bio card padded">
           <h2>About LoopMeets</h2>
           <p class="muted">
@@ -240,32 +739,54 @@
 
         <div class="card padded">
           <span class="badge-title">Founder & CEO</span>
+
           <div class="head">
-            <img alt="Roshni Anarkat headshot" src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=256&q=80&auto=format&fit=crop" />
+            <img
+              alt="Roshni Anarkat headshot"
+              src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=256&q=80&auto=format&fit=crop"
+            />
             <div>
-              <strong>Roshni Anarkat</strong><br/>
+              <strong>Roshni Anarkat</strong><br />
               <span class="meta">Founder & CEO, LoopMeets</span>
             </div>
           </div>
+
           <p class="muted">
-            Roshni founded LoopMeets to make solo travel more social, safe, and spontaneous. She envisioned a platform
+            Roshni founded LoopMeets to make solo travel more social, safe, and spontaneous —
             where strangers become travel partners through shared interests and clear expectations.
           </p>
         </div>
       </div>
 
-      <div class="howitworks" style="margin-top:1rem;">
+      <div class="howitworks" style="margin-top: 1rem;">
         <div class="step">
-          <div><span class="num">1</span><strong>Create your profile</strong></div>
-          <p class="muted">Pick your travel climate, pace, budget, and favorite activities. Update anytime.</p>
+          <div>
+            <span class="num">1</span>
+            <strong>Create your profile</strong>
+          </div>
+          <p class="muted">
+            Pick your travel climate, pace, budget, and favorite activities. Update anytime.
+          </p>
         </div>
+
         <div class="step">
-          <div><span class="num">2</span><strong>Find your loop</strong></div>
-          <p class="muted">Browse public loops or see your “Matched” tab for plans that fit your preferences.</p>
+          <div>
+            <span class="num">2</span>
+            <strong>Find your loop</strong>
+          </div>
+          <p class="muted">
+            Browse public loops or see your “Matched” tab for plans that fit your preferences.
+          </p>
         </div>
+
         <div class="step">
-          <div><span class="num">3</span><strong>Meet up & explore</strong></div>
-          <p class="muted">Join, show up, and enjoy — small groups keep things flexible and fun.</p>
+          <div>
+            <span class="num">3</span>
+            <strong>Meet up & explore</strong>
+          </div>
+          <p class="muted">
+            Join, show up, and enjoy — small groups keep things flexible and fun.
+          </p>
         </div>
       </div>
 
@@ -274,18 +795,23 @@
       </div>
     </section>
 
-    <!-- ABOUT (separate route/page with different layout) -->
-    <section id="page-about" class="page" role="region" aria-labelledby="about-title">
+    <!-- =============== ABOUT PAGE (separate route) =============== -->
+    <section
+      id="page-about"
+      class="page"
+      role="region"
+      aria-labelledby="about-title"
+    >
       <div class="about-hero">
         <h1 id="about-title">Why LoopMeets Exists</h1>
         <p>
-          Traveling solo can be freeing — and also lonely. LoopMeets was built to make it easy to find the
-          right people for the right moments: a sunrise hike, a ramen crawl, a museum afternoon. Small groups,
-          shared interests, clear expectations.
+          Traveling solo can be freeing — and also lonely. LoopMeets makes it easy to find the
+          right people for the right moments: a sunrise hike, a ramen crawl, a museum afternoon.
+          Small groups, shared interests, clear expectations.
         </p>
       </div>
 
-      <div class="about-grid" style="margin-top:1rem;">
+      <div class="about-grid" style="margin-top: 1rem;">
         <div class="about-card">
           <span class="about-tag">The Inspiration</span>
           <h3 style="margin-top:.5rem;">From chance encounters to intentional community</h3>
@@ -297,7 +823,8 @@
         </div>
 
         <aside class="about-aside">
-          <div class="card padded">
+          <!-- Anchor target for nav link: #/about#founder -->
+          <div id="founder" class="card padded">
             <h3>Founder: Roshni Anarkat</h3>
             <p class="muted">
               Roshni is passionate about community design and accessible travel. Her goal with LoopMeets:
@@ -325,11 +852,13 @@
             <li>Location/time-aware suggestions.</li>
             <li>Weighted interests & learning-based recommendations.</li>
           </ul>
-          <p class="muted">We’ll evolve transparently, with user control at the center.</p>
+          <p class="muted">
+            We’ll evolve transparently, with user control at the center.
+          </p>
         </div>
       </div>
 
-      <div class="values" style="margin-top:1rem;">
+      <div class="values" style="margin-top: 1rem;">
         <div class="value">
           <h3>Kindness</h3>
           <p class="muted">We default to respect, clarity, and care.</p>
@@ -345,19 +874,22 @@
       </div>
     </section>
 
-    <!-- LOGIN -->
+    <!-- =============== LOGIN PAGE =============== -->
     <section id="page-login" class="page">
       <div class="card padded">
         <h2>Login</h2>
+
         <div class="grid">
           <div class="col-6">
             <label for="loginEmail">Email</label>
             <input type="email" id="loginEmail" placeholder="you@example.com" />
           </div>
+
           <div class="col-6">
             <label for="loginPassword">Password</label>
             <input type="password" id="loginPassword" placeholder="••••••••" />
           </div>
+
           <div class="col-12 actions">
             <button id="loginBtn" class="primary" type="button">Login</button>
             <a href="#/register">Create an account</a>
@@ -366,23 +898,27 @@
       </div>
     </section>
 
-    <!-- REGISTER -->
+    <!-- =============== REGISTER PAGE =============== -->
     <section id="page-register" class="page">
       <div class="card padded stack">
         <h2>Create your account</h2>
+
         <div class="grid">
           <div class="col-6">
             <label for="regEmail">Email</label>
             <input type="email" id="regEmail" placeholder="you@example.com" />
           </div>
+
           <div class="col-6">
             <label for="regPassword">Password</label>
             <input type="password" id="regPassword" placeholder="Choose a secure password" />
           </div>
+
           <div class="col-6">
             <label for="regUsername">Username</label>
             <input type="text" id="regUsername" placeholder="Display name" />
           </div>
+
           <div class="col-6">
             <label for="regPhoto">Profile Photo</label>
             <input type="file" id="regPhoto" accept="image/*" />
@@ -390,25 +926,38 @@
         </div>
 
         <h3>Preferences</h3>
+
         <div class="grid">
           <div class="col-4">
             <label for="regClimate">Climate</label>
             <select id="regClimate">
-              <option value="">Select</option><option value="cold">Cold</option><option value="temperate">Temperate</option><option value="warm">Warm</option>
+              <option value="">Select</option>
+              <option value="cold">Cold</option>
+              <option value="temperate">Temperate</option>
+              <option value="warm">Warm</option>
             </select>
           </div>
+
           <div class="col-4">
             <label for="regPace">Pace</label>
             <select id="regPace">
-              <option value="">Select</option><option value="relaxed">Relaxed</option><option value="moderate">Moderate</option><option value="adventurous">Adventurous</option>
+              <option value="">Select</option>
+              <option value="relaxed">Relaxed</option>
+              <option value="moderate">Moderate</option>
+              <option value="adventurous">Adventurous</option>
             </select>
           </div>
+
           <div class="col-4">
             <label for="regBudget">Budget</label>
             <select id="regBudget">
-              <option value="">Select</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+              <option value="">Select</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
+
           <div class="col-12">
             <label for="regActivities">Activities (comma separated)</label>
             <input type="text" id="regActivities" placeholder="hiking, sushi, museums" />
@@ -422,71 +971,84 @@
       </div>
     </section>
 
-    <!-- ALL LOOPS -->
+    <!-- =============== ALL LOOPS =============== -->
     <section id="page-all" class="page">
       <div class="card padded stack">
-        <div class="row" style="justify-content:space-between;">
+
+        <div class="row" style="justify-content: space-between;">
           <h2>All Loops</h2>
-          <button id="openCreateLoop" class="primary" type="button" style="width:auto;">Create Loop</button>
+          <button id="openCreateLoop" class="primary" type="button" style="width: auto;">
+            Create Loop
+          </button>
         </div>
 
         <!-- Create Loop Form -->
         <div id="createLoopForm" class="card hidden">
           <h3>Create a Loop</h3>
+
           <div class="grid">
             <div class="col-8">
               <label for="loopTitle">Title (what is this loop about?)</label>
               <input type="text" id="loopTitle" placeholder="Sushi Crawl in Tokyo" />
             </div>
+
             <div class="col-4">
               <label for="loopCapacity">Capacity (max participants)</label>
               <input type="number" id="loopCapacity" min="1" value="4" />
             </div>
+
             <div class="col-6">
               <label for="loopLocation">Location</label>
               <input type="text" id="loopLocation" placeholder="Shibuya, Tokyo" />
             </div>
+
             <div class="col-6">
-              <label for="loopStartAt">Date & Time</label>
+              <label for="loopStartAt">Date &amp; Time</label>
               <input type="datetime-local" id="loopStartAt" />
             </div>
+
             <div class="col-12">
               <label for="loopDescription">Description</label>
               <textarea id="loopDescription" placeholder="Hop between 3–4 sushi spots; casual vibe."></textarea>
             </div>
+
             <div class="col-12">
               <label for="loopActivities">Activities (comma separated, optional)</label>
               <input type="text" id="loopActivities" placeholder="sushi, foodies, walking" />
             </div>
           </div>
+
           <div class="actions">
             <button id="submitCreateLoop" class="primary" type="button">Create</button>
             <button id="cancelCreateLoop" type="button" class="ghost">Cancel</button>
           </div>
         </div>
 
+        <!-- Live list of loops -->
         <div id="allLoops" class="stack"></div>
       </div>
     </section>
 
-    <!-- MATCHED LOOPS -->
+    <!-- =============== MATCHED LOOPS =============== -->
     <section id="page-matched" class="page">
       <div class="card padded stack">
         <h2>Matched Loops</h2>
         <p class="muted">Based on your preferences.</p>
+
         <div id="matchedLoops" class="stack"></div>
       </div>
     </section>
 
-    <!-- MY LOOPS -->
+    <!-- =============== MY LOOPS =============== -->
     <section id="page-my" class="page">
       <div class="card padded stack">
         <h2>My Loops</h2>
+
         <div id="myLoops" class="stack"></div>
       </div>
     </section>
 
-    <!-- PROFILE -->
+    <!-- =============== PROFILE =============== -->
     <section id="page-profile" class="page">
       <div class="card padded stack">
         <h2>My Profile</h2>
@@ -496,52 +1058,92 @@
             <label for="username">Username</label>
             <input type="text" id="username" placeholder="Your display name" />
           </div>
+
           <div class="col-6">
             <label for="profilePhoto">Profile Photo</label>
             <input type="file" id="profilePhoto" accept="image/*" />
           </div>
+
           <div class="col-12">
             <div class="row">
-              <img id="userPhoto" alt="Profile avatar" width="72" height="72" style="border-radius:50%; object-fit:cover;">
-              <button id="saveProfileBtn" class="primary" type="button" style="width:auto;">Save Profile</button>
+              <img
+                id="userPhoto"
+                alt="Profile avatar"
+                width="72"
+                height="72"
+                style="border-radius:50%; object-fit:cover;"
+              />
+              <button
+                id="saveProfileBtn"
+                class="primary"
+                type="button"
+                style="width:auto;"
+              >
+                Save Profile
+              </button>
             </div>
           </div>
         </div>
 
         <h3>Edit Preferences</h3>
+
         <div class="grid">
           <div class="col-4">
             <label for="climate">Climate</label>
             <select id="climate">
-              <option value="">Select</option><option value="cold">Cold</option><option value="temperate">Temperate</option><option value="warm">Warm</option>
+              <option value="">Select</option>
+              <option value="cold">Cold</option>
+              <option value="temperate">Temperate</option>
+              <option value="warm">Warm</option>
             </select>
           </div>
+
           <div class="col-4">
             <label for="pace">Pace</label>
             <select id="pace">
-              <option value="">Select</option><option value="relaxed">Relaxed</option><option value="moderate">Moderate</option><option value="adventurous">Adventurous</option>
+              <option value="">Select</option>
+              <option value="relaxed">Relaxed</option>
+              <option value="moderate">Moderate</option>
+              <option value="adventurous">Adventurous</option>
             </select>
           </div>
+
           <div class="col-4">
             <label for="budget">Budget</label>
             <select id="budget">
-              <option value="">Select</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+              <option value="">Select</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
+
           <div class="col-12">
             <label for="activities">Activities (comma separated)</label>
             <input type="text" id="activities" placeholder="hiking, sushi, museums" />
           </div>
         </div>
-        <div>
-          <button id="savePrefsBtn" class="primary" type="button" style="width:auto;">Save Preferences</button>
-        </div>
 
+        <div>
+          <button
+            id="savePrefsBtn"
+            class="primary"
+            type="button"
+            style="width:auto;"
+          >
+            Save Preferences
+          </button>
+        </div>
       </div>
     </section>
 
   </main>
 
+  <noscript>
+    Please enable JavaScript to use LoopMeets.
+  </noscript>
+
+  <!-- Module script -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
