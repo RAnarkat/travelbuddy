@@ -17,15 +17,23 @@
       --ink: #1f2937;
       --muted: #6b7280;
       --line: #e6e8eb;
-      --brand: #0f766e;     /* turquoise */
+      --brand: #0f766e;
       --brand-ink: #ffffff;
       --danger: #b91c1c;
-      --accent: #0ea5a4;    /* softer turquoise accent */
+      --accent: #0ea5a4;
     }
     * { box-sizing: border-box; }
     body { margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--ink); }
     a { color: var(--brand); text-decoration: none; }
     a:hover { text-decoration: underline; }
+
+    /* Buttons */
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.7rem 1rem; border-radius:10px; border:1px solid var(--line); font-weight:600; cursor:pointer; text-decoration:none; transition: background .15s ease, transform .06s ease; }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background:var(--brand); color:var(--brand-ink); border-color:transparent; }
+    .btn-primary:hover { filter:brightness(0.95); text-decoration:none; }
+    .btn-ghost { background:#fff; color:var(--ink); }
+    .btn-ghost:hover { background:#f2f3f5; text-decoration:none; }
 
     /* Header */
     header { background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
@@ -34,11 +42,7 @@
     .brand h1 { font-size:1.15rem; margin:0; letter-spacing:0.2px; }
     .brand .mark { width:32px; height:32px; border-radius:12px; background:var(--brand); display:grid; place-items:center; color:#fff; font-weight:700; }
     nav { margin-left:auto; display:flex; gap:.5rem; flex-wrap:wrap; }
-    nav a, nav button {
-      appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink);
-      padding:.5rem .9rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none;
-      transition: background .15s ease, transform .06s ease;
-    }
+    nav a, nav button { appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink); padding:.5rem .9rem; border-radius:10px; cursor:pointer; font-weight:600; text-decoration:none; transition: background .15s ease, transform .06s ease; }
     nav a:hover, nav button:hover { background:#f2f3f5; }
     nav a.primary-btn { border-color: transparent; background: var(--brand); color: var(--brand-ink); }
     nav a.primary-btn:hover { filter:brightness(0.95); }
@@ -65,10 +69,7 @@
     p.muted { color:var(--muted); margin:.25rem 0 0; line-height:1.6; }
 
     label { font-size:.9rem; color:#1b1b1b; }
-    input, select, button, textarea {
-      width:100%; padding:.7rem .8rem; border:1px solid var(--line);
-      border-radius:10px; font-size:1rem; background:#fff; color:var(--ink);
-    }
+    input, select, button, textarea { width:100%; padding:.7rem .8rem; border:1px solid var(--line); border-radius:10px; font-size:1rem; background:#fff; color:var(--ink); }
     input[type="datetime-local"] { padding:.6rem .8rem; }
     textarea { min-height:100px; }
     button.primary { background:var(--brand); color:var(--brand-ink); border-color:transparent; }
@@ -96,7 +97,6 @@
     .hero h1 { font-size:2rem; margin:0; letter-spacing: .2px; }
     .hero p { font-size:1.05rem; color:#374151; margin:0.25rem 0 0; max-width:60ch; line-height:1.7; }
     .cta { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.5rem; }
-    .cta a, .cta button { width:auto; }
     .pill { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .6rem; background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; border-radius:999px; font-weight:600; font-size:.86rem; }
 
     .features { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
@@ -104,10 +104,7 @@
     .feature h3 { margin:0; font-size:1.02rem; }
     .feature p { margin:.4rem 0 0; color:var(--muted); line-height:1.6; }
 
-    .founder {
-      display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr);
-      align-items:stretch;
-    }
+    .founder { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); align-items:stretch; }
     .founder .bio { grid-column: span 7; }
     .founder .card { grid-column: span 5; display:grid; gap:.7rem; }
     .founder .badge-title { display:inline-block; font-weight:700; color:#0f766e; background:#ecfeff; border:1px solid #99f6e4; padding:.2rem .5rem; border-radius:999px; font-size:.82rem; }
@@ -120,8 +117,9 @@
 
     .footer { color:var(--muted); font-size:.9rem; text-align:center; padding:1.5rem 0 2rem; }
 
-    /* Smooth anchor offset so content isn't hidden behind the sticky header */
+    /* Smooth anchor offset (if needed) */
     #about { scroll-margin-top: 90px; }
+
     @media (max-width: 900px) {
       .feature { grid-column: span 6; }
       .founder .bio { grid-column: span 12; }
@@ -150,14 +148,15 @@
       <!-- Signed-out nav -->
       <nav id="navSignedOut" aria-label="Primary">
         <a href="#/home">Home</a>
-        <a href="#/home" class="nav-about">About</a>
+        <a href="#/about">About</a>
         <a href="#/login">Login</a>
         <a class="primary-btn" href="#/register">Get Started</a>
       </nav>
 
       <!-- Signed-in nav -->
       <nav id="navSignedIn" class="hidden" aria-label="Signed-in navigation">
-        <a href="#/home" class="nav-about">About</a>
+        <a href="#/home">Home</a>
+        <a href="#/about">About</a>
         <a href="#/all">All Loops</a>
         <a href="#/matched">Matched</a>
         <a href="#/my">My Loops</a>
@@ -180,9 +179,9 @@
           and turn new places into shared memories.
         </p>
         <div class="cta">
-          <a class="primary-btn" href="#/register" aria-label="Create an account and get started">Join LoopMeets</a>
-          <a class="ghost-btn" href="#/login" style="border:1px solid var(--line); padding:.7rem .9rem; border-radius:10px;" aria-label="Sign in to your account">I already have an account</a>
-          <a href="#/all" aria-label="Browse all loops">Browse loops</a>
+          <a class="btn btn-primary" href="#/register" aria-label="Create an account and get started">Join LoopMeets</a>
+          <a class="btn btn-ghost" href="#/login" aria-label="Sign in to your account">I already have an account</a>
+          <a class="btn btn-ghost" href="#/all" aria-label="Browse all loops">Browse loops</a>
         </div>
       </div>
 
@@ -201,9 +200,7 @@
         </div>
       </div>
 
-      <!-- ABOUT anchor (blurb + mission + founder) -->
       <div class="founder" style="margin-top:1rem;">
-        <!-- About blurb + mission -->
         <div id="about" class="bio card padded">
           <h2>About LoopMeets</h2>
           <p class="muted">
@@ -217,7 +214,6 @@
           </p>
         </div>
 
-        <!-- Founder card -->
         <div class="card padded">
           <span class="badge-title">Founder & CEO</span>
           <div class="head">
@@ -254,6 +250,66 @@
 
       <div class="footer">
         © <span id="yearNow"></span> LoopMeets • Built for travelers, by travelers.
+      </div>
+    </section>
+
+    <!-- About (separate route/page) -->
+    <section id="page-about" class="page">
+      <div class="card padded stack">
+        <h2>About LoopMeets</h2>
+        <p class="muted">
+          LoopMeets helps solo travelers find the right people for the right experiences. We align travelers by climate preference,
+          budget, pace, and shared activities to make planning effortless and groups feel natural from the start.
+        </p>
+
+        <div class="grid">
+          <div class="col-7">
+            <div class="card padded">
+              <h3>How Our Matching Works (Today)</h3>
+              <p class="muted">
+                We compute a simple compatibility score between your saved preferences and each loop’s preferences:
+              </p>
+              <ul class="muted">
+                <li><strong>Exact matches</strong>: +3 points each for climate, pace, and budget.</li>
+                <li><strong>Activities overlap</strong>: up to +6 points using Jaccard overlap (shared ÷ union).</li>
+                <li><strong>Total score</strong> ≈ 0–15. Higher = better fit.</li>
+              </ul>
+              <pre style="white-space:pre-wrap; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:.8rem; font-size:.9rem;">
+score = 0
+if user.climate == loop.climate: score += 3
+if user.pace    == loop.pace:    score += 3
+if user.budget  == loop.budget:  score += 3
+score += round(6 * (|Activities ∩| / |Activities ∪|))
+              </pre>
+            </div>
+          </div>
+          <div class="col-5">
+            <div class="card padded">
+              <h3>What’s Next (Roadmap)</h3>
+              <ul class="muted">
+                <li>Trust & safety signals for groups.</li>
+                <li>Location & time-aware recommendations.</li>
+                <li>Optional profile depth and interests weighting.</li>
+                <li>Learning-based suggestions (collaborative filtering).</li>
+              </ul>
+              <p class="muted">We’ll evolve carefully, with transparency and user control.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card padded">
+          <h3>Founder & CEO</h3>
+          <div class="row">
+            <img alt="Roshni Anarkat headshot" src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=256&q=80&auto=format&fit=crop" width="64" height="64" style="border-radius:50%;object-fit:cover;border:2px solid #e6e8eb;">
+            <div>
+              <strong>Roshni Anarkat</strong>
+              <p class="muted" style="margin:.2rem 0 0;">
+                Building LoopMeets to make solo travel more social, safe, and intentional.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
