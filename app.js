@@ -31,6 +31,7 @@ const storage = getStorage(app);
 // ---- DOM refs ----
 const pages = {
   home: document.getElementById("page-home"),
+  about: document.getElementById("page-about"),
   login: document.getElementById("page-login"),
   register: document.getElementById("page-register"),
   all: document.getElementById("page-all"),
@@ -124,6 +125,7 @@ function hideAllPages() {
 
 const TITLES = {
   "#/home": "LoopMeets — Connect. Travel. Belong.",
+  "#/about": "About • LoopMeets",
   "#/login": "Login • LoopMeets",
   "#/register": "Create Account • LoopMeets",
   "#/all": "All Loops • LoopMeets",
@@ -197,9 +199,6 @@ function escapeHtml(str) {
 
 function loopCard(loopId, loop, currentUserId) {
   const participants = loop.participants ? Object.keys(loop.participants) : [];
-  theCountFix: {
-    // Keep original logic but ensure numeric display consistency
-  }
   const count = participants.length;
   const cap = loop.capacity || 0;
   const full = cap && count >= cap;
@@ -246,6 +245,7 @@ function loopCard(loopId, loop, currentUserId) {
 // ---- Router ----
 const ROUTES = {
   "#/home": "home",
+  "#/about": "about",
   "#/login": "login",
   "#/register": "register",
   "#/all": "all",
@@ -253,8 +253,6 @@ const ROUTES = {
   "#/my": "my",
   "#/profile": "profile",
 };
-
-let pendingScrollTarget = null;
 
 function renderRoute() {
   const hash = location.hash || "#/home";
@@ -267,40 +265,13 @@ function renderRoute() {
   const yearEl = document.getElementById("yearNow");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // If we navigated with an intention to scroll (e.g., About)
-  if (pendingScrollTarget && pageKey === "home") {
-    const el = document.getElementById(pendingScrollTarget);
-    if (el) {
-      // small delay to ensure layout is painted
-      setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
-    }
-    pendingScrollTarget = null;
+  // If user visits "matched", compute on demand
+  if (hash === "#/matched" && auth.currentUser) {
+    renderMatchedLoops(auth.currentUser.uid);
   }
 }
 
 window.addEventListener("hashchange", renderRoute);
-
-// Wire "About" links in both navs to anchor-scroll to the founder section
-function bindAboutLinks() {
-  const handler = (e) => {
-    e.preventDefault();
-    pendingScrollTarget = "about";
-    // Always route to home first, then smooth scroll
-    if ((location.hash || "#/home") !== "#/home") {
-      go("#/home");
-    } else {
-      // already on home, just scroll
-      const el = document.getElementById("about");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  document.querySelectorAll(".nav-about").forEach(a => {
-    a.removeEventListener("click", handler); // idempotent
-    a.addEventListener("click", handler);
-  });
-}
-bindAboutLinks();
 
 // ---- Auth Actions ----
 loginBtn?.addEventListener("click", async () => {
@@ -353,7 +324,7 @@ registerBtn?.addEventListener("click", async () => {
 logoutBtn?.addEventListener("click", async () => {
   try {
     await signOut(auth);
-    go("#/home");
+    go("#/home"); // always land on Home after logout
   } catch (e) {
     alert(cleanFirebaseError(e.message));
   }
@@ -451,7 +422,6 @@ submitCreateLoop?.addEventListener("click", async () => {
       createdAt: Date.now(),
       participants: { [uid]: true },
       loopPrefs,
-      // new details:
       title,
       capacity,
       location: locationText || null,
@@ -510,9 +480,8 @@ function bindLoopContainerEvents(container, currentUserId) {
         const loop = snap.val();
         if (loop.creator !== currentUserId) return alert("Only the creator can edit this loop.");
 
-        // Quick edit prompts (simple + fast)
         const newTitle = prompt("Update title:", loop.title || "");
-        if (newTitle === null) return; // cancel
+        if (newTitle === null) return;
         const newDesc = prompt("Update description:", loop.description || "");
         if (newDesc === null) return;
         const newCapStr = prompt("Update capacity (number):", String(loop.capacity || 4));
@@ -625,19 +594,23 @@ onAuthStateChanged(auth, (user) => {
       chipName.textContent = data.username || user.email || "User";
       setAvatar(chipPhoto, data.photoURL);
       setAvatar(userPhotoDisplay, data.photoURL);
+
+      // hydrate profile fields + preferences every login
+      if (usernameInput) usernameInput.value = data.username || "";
+      const prefs = data.preferences || {};
+      if (climateInput) climateInput.value = prefs.climate || "";
+      if (paceInput) paceInput.value = prefs.pace || "";
+      if (budgetInput) budgetInput.value = prefs.budget || "";
+      if (activitiesInput) activitiesInput.value = (prefs.activities || []).join(", ");
     });
 
     // live lists
     renderAllLoops(user.uid);
     renderMyLoops(user.uid);
 
-    // route guard: signed-in default to All
-    const hash = location.hash || "#/all";
-    if (!["#/all", "#/matched", "#/my", "#/profile", "#/home"].includes(hash)) {
-      go("#/all");
-    } else {
-      renderRoute();
-    }
+    // IMPORTANT: Do NOT auto-redirect to #/all anymore.
+    // Keep whatever route the user is on (default is #/home).
+    renderRoute();
 
     // recompute matches when visiting matched page
     window.addEventListener("hashchange", () => {
@@ -653,13 +626,9 @@ onAuthStateChanged(auth, (user) => {
     setAvatar(chipPhoto, null);
     setAvatar(userPhotoDisplay, null);
 
-    // signed-out default to Home
-    const hash = location.hash || "#/home";
-    if (!["#/home", "#/login", "#/register"].includes(hash)) {
-      go("#/home");
-    } else {
-      renderRoute();
-    }
+    // Always keep users on Home by default when signed out
+    if (!location.hash) location.hash = "#/home";
+    renderRoute();
   }
 });
 
