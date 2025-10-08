@@ -4,12 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LoopMeets — Connect. Travel. Belong.</title>
-  <meta name="description" content="LoopMeets matches solo travelers with similar interests to share authentic experiences and form lasting friendships." />
+
+  <!-- Base SEO (route-specific tags are enhanced dynamically by app.js) -->
+  <meta name="robots" content="index,follow">
+  <meta name="description" content="LoopMeets matches solo travelers with similar interests to share authentic experiences and form lasting friendships.">
+  <meta name="keywords" content="LoopMeets, Roshni Anarkat, solo travel, travel groups, meet travelers, matching, activities">
+  <link rel="canonical" href="/" />
   <meta property="og:title" content="LoopMeets — Connect. Travel. Belong.">
   <meta property="og:description" content="Match with travelers who share your vibe. Create loops, join experiences, and meet your people.">
   <meta property="og:type" content="website">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%230f766e%22/><path d=%22M50 20 a30 30 0 1 0 0.1 0%22 fill=%22%23fff%22/></svg>">
+  <meta property="og:url" content="/" />
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%230f766e%22/><text x=%2250%22 y=%2258%22 font-size=%2238%22 text-anchor=%22middle%22 fill=%22%23fff%22 font-family=%22Arial%22>LM</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --bg: #f6f7f8;
@@ -85,7 +94,7 @@
     .meta { color:var(--muted); font-size:.92rem; }
     .full { color:var(--danger); font-weight:600; }
 
-    /* --- LANDING PAGE (Home) --- */
+    /* --- HOME --- */
     .hero {
       background: radial-gradient(1200px 600px at 10% -20%, rgba(14,165,164,.08), transparent 60%),
                   radial-gradient(800px 400px at 95% 10%, rgba(15,118,110,.07), transparent 50%);
@@ -117,18 +126,37 @@
 
     .footer { color:var(--muted); font-size:.9rem; text-align:center; padding:1.5rem 0 2rem; }
 
-    /* Smooth anchor offset (if needed) */
-    #about { scroll-margin-top: 90px; }
+    /* --- ABOUT (distinct layout) --- */
+    .about-hero {
+      display:grid; gap:1rem;
+      border:1px solid var(--line); border-radius:18px; padding:2rem;
+      background: linear-gradient(135deg, rgba(14,165,164,.1), rgba(14,165,164,0) 50%),
+                  linear-gradient(0deg, #fff, #fff);
+    }
+    .about-hero h1 { margin:0; font-size:2rem; }
+    .about-hero p { margin:.25rem 0 0; color:#374151; max-width:70ch; line-height:1.7; }
+
+    .about-grid { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
+    .about-card { grid-column: span 6; background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.2rem; }
+    .about-aside { grid-column: span 6; }
+    .about-tag { display:inline-block; padding:.2rem .6rem; background:#ecfeff; border:1px solid #99f6e4; color:#0f766e; border-radius:999px; font-weight:700; font-size:.82rem; }
+
+    .values { display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); }
+    .value { grid-column: span 4; border:1px solid var(--line); border-radius:14px; padding:1rem; background:#fff; }
 
     @media (max-width: 900px) {
       .feature { grid-column: span 6; }
       .founder .bio { grid-column: span 12; }
       .founder .card { grid-column: span 12; }
       .step { grid-column: span 6; }
+      .about-card { grid-column: span 12; }
+      .about-aside { grid-column: span 12; }
+      .value { grid-column: span 6; }
     }
     @media (max-width: 600px) {
       .feature { grid-column: span 12; }
       .step { grid-column: span 12; }
+      .value { grid-column: span 12; }
     }
   </style>
 </head>
@@ -168,11 +196,11 @@
 
   <main class="stack">
 
-    <!-- Home -->
-    <section id="page-home" class="page active">
+    <!-- HOME -->
+    <section id="page-home" class="page active" role="region" aria-labelledby="home-title">
       <div class="hero">
         <span class="pill">Connect. Travel. Belong.</span>
-        <h1>Meet travelers who share your vibe — then explore together.</h1>
+        <h1 id="home-title">Meet travelers who share your vibe — then explore together.</h1>
         <p>
           LoopMeets is an interest-based matching platform for solo travelers.
           Create small activities (we call them “loops”), join plans that match your pace and budget,
@@ -201,16 +229,12 @@
       </div>
 
       <div class="founder" style="margin-top:1rem;">
-        <div id="about" class="bio card padded">
+        <div class="bio card padded">
           <h2>About LoopMeets</h2>
           <p class="muted">
             LoopMeets is a traveler-matching platform designed to make solo travel social, safe, and intentional.
             Our mission is to help people form small, interest-aligned groups — “loops” — that lower planning friction,
             build trust, and turn new cities into communities.
-          </p>
-          <p class="muted">
-            We’re starting simple and community-first: transparent plans, respectful norms, and tools that keep logistics light.
-            As we grow, we’re adding richer profiles, trust features, and curated loops in top destinations.
           </p>
         </div>
 
@@ -224,11 +248,8 @@
             </div>
           </div>
           <p class="muted">
-            Roshni founded LoopMeets to make solo travel more social, safe, and spontaneous.
-            Inspired by community-building work and a love for exploring new places, she envisioned a platform where strangers become travel partners through shared interests and clear expectations.
-          </p>
-          <p class="muted">
-            “LoopMeets should feel like joining friends you haven’t met yet — aligned on vibe, open to adventure, and kind.”
+            Roshni founded LoopMeets to make solo travel more social, safe, and spontaneous. She envisioned a platform
+            where strangers become travel partners through shared interests and clear expectations.
           </p>
         </div>
       </div>
@@ -253,67 +274,78 @@
       </div>
     </section>
 
-    <!-- About (separate route/page) -->
-    <section id="page-about" class="page">
-      <div class="card padded stack">
-        <h2>About LoopMeets</h2>
-        <p class="muted">
-          LoopMeets helps solo travelers find the right people for the right experiences. We align travelers by climate preference,
-          budget, pace, and shared activities to make planning effortless and groups feel natural from the start.
+    <!-- ABOUT (separate route/page with different layout) -->
+    <section id="page-about" class="page" role="region" aria-labelledby="about-title">
+      <div class="about-hero">
+        <h1 id="about-title">Why LoopMeets Exists</h1>
+        <p>
+          Traveling solo can be freeing — and also lonely. LoopMeets was built to make it easy to find the
+          right people for the right moments: a sunrise hike, a ramen crawl, a museum afternoon. Small groups,
+          shared interests, clear expectations.
         </p>
+      </div>
 
-        <div class="grid">
-          <div class="col-7">
-            <div class="card padded">
-              <h3>How Our Matching Works (Today)</h3>
-              <p class="muted">
-                We compute a simple compatibility score between your saved preferences and each loop’s preferences:
-              </p>
-              <ul class="muted">
-                <li><strong>Exact matches</strong>: +3 points each for climate, pace, and budget.</li>
-                <li><strong>Activities overlap</strong>: up to +6 points using Jaccard overlap (shared ÷ union).</li>
-                <li><strong>Total score</strong> ≈ 0–15. Higher = better fit.</li>
-              </ul>
-              <pre style="white-space:pre-wrap; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:.8rem; font-size:.9rem;">
-score = 0
-if user.climate == loop.climate: score += 3
-if user.pace    == loop.pace:    score += 3
-if user.budget  == loop.budget:  score += 3
-score += round(6 * (|Activities ∩| / |Activities ∪|))
-              </pre>
-            </div>
-          </div>
-          <div class="col-5">
-            <div class="card padded">
-              <h3>What’s Next (Roadmap)</h3>
-              <ul class="muted">
-                <li>Trust & safety signals for groups.</li>
-                <li>Location & time-aware recommendations.</li>
-                <li>Optional profile depth and interests weighting.</li>
-                <li>Learning-based suggestions (collaborative filtering).</li>
-              </ul>
-              <p class="muted">We’ll evolve carefully, with transparency and user control.</p>
-            </div>
-          </div>
+      <div class="about-grid" style="margin-top:1rem;">
+        <div class="about-card">
+          <span class="about-tag">The Inspiration</span>
+          <h3 style="margin-top:.5rem;">From chance encounters to intentional community</h3>
+          <p class="muted">
+            LoopMeets grew from countless conversations with travelers who wanted spontaneous plans without
+            the chaos of giant group chats. We focused on signal over noise: preferences that matter and
+            logistics that stay light.
+          </p>
         </div>
 
-        <div class="card padded">
-          <h3>Founder & CEO</h3>
-          <div class="row">
-            <img alt="Roshni Anarkat headshot" src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=256&q=80&auto=format&fit=crop" width="64" height="64" style="border-radius:50%;object-fit:cover;border:2px solid #e6e8eb;">
-            <div>
-              <strong>Roshni Anarkat</strong>
-              <p class="muted" style="margin:.2rem 0 0;">
-                Building LoopMeets to make solo travel more social, safe, and intentional.
-              </p>
-            </div>
+        <aside class="about-aside">
+          <div class="card padded">
+            <h3>Founder: Roshni Anarkat</h3>
+            <p class="muted">
+              Roshni is passionate about community design and accessible travel. Her goal with LoopMeets:
+              help travelers feel safe, welcome, and excited to say “yes” to exploring together.
+            </p>
           </div>
+        </aside>
+
+        <div class="about-card">
+          <h3>How matching works (now)</h3>
+          <p class="muted">
+            We compute a compatibility score between your saved preferences and each loop’s preferences:
+          </p>
+          <ul class="muted" style="margin-left:1rem;">
+            <li><strong>Exact matches</strong>: +3 each for climate, pace, budget.</li>
+            <li><strong>Activities overlap</strong>: up to +6 via Jaccard (shared ÷ union).</li>
+            <li><strong>Total</strong>: ~0–15, higher = better fit.</li>
+          </ul>
         </div>
 
+        <div class="about-card">
+          <h3>What’s next (roadmap)</h3>
+          <ul class="muted" style="margin-left:1rem;">
+            <li>Trust & safety signals (mutuals, attendance streaks).</li>
+            <li>Location/time-aware suggestions.</li>
+            <li>Weighted interests & learning-based recommendations.</li>
+          </ul>
+          <p class="muted">We’ll evolve transparently, with user control at the center.</p>
+        </div>
+      </div>
+
+      <div class="values" style="margin-top:1rem;">
+        <div class="value">
+          <h3>Kindness</h3>
+          <p class="muted">We default to respect, clarity, and care.</p>
+        </div>
+        <div class="value">
+          <h3>Safety</h3>
+          <p class="muted">Small groups, informed choices, and transparent plans.</p>
+        </div>
+        <div class="value">
+          <h3>Belonging</h3>
+          <p class="muted">Travel feels better when you feel at home with your group.</p>
+        </div>
       </div>
     </section>
 
-    <!-- Login -->
+    <!-- LOGIN -->
     <section id="page-login" class="page">
       <div class="card padded">
         <h2>Login</h2>
@@ -334,7 +366,7 @@ score += round(6 * (|Activities ∩| / |Activities ∪|))
       </div>
     </section>
 
-    <!-- Register -->
+    <!-- REGISTER -->
     <section id="page-register" class="page">
       <div class="card padded stack">
         <h2>Create your account</h2>
@@ -390,7 +422,7 @@ score += round(6 * (|Activities ∩| / |Activities ∪|))
       </div>
     </section>
 
-    <!-- All Loops -->
+    <!-- ALL LOOPS -->
     <section id="page-all" class="page">
       <div class="card padded stack">
         <div class="row" style="justify-content:space-between;">
@@ -437,7 +469,7 @@ score += round(6 * (|Activities ∩| / |Activities ∪|))
       </div>
     </section>
 
-    <!-- Matched Loops -->
+    <!-- MATCHED LOOPS -->
     <section id="page-matched" class="page">
       <div class="card padded stack">
         <h2>Matched Loops</h2>
@@ -446,7 +478,7 @@ score += round(6 * (|Activities ∩| / |Activities ∪|))
       </div>
     </section>
 
-    <!-- My Loops -->
+    <!-- MY LOOPS -->
     <section id="page-my" class="page">
       <div class="card padded stack">
         <h2>My Loops</h2>
@@ -454,7 +486,7 @@ score += round(6 * (|Activities ∩| / |Activities ∪|))
       </div>
     </section>
 
-    <!-- Profile -->
+    <!-- PROFILE -->
     <section id="page-profile" class="page">
       <div class="card padded stack">
         <h2>My Profile</h2>
